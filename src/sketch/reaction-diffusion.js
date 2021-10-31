@@ -18,14 +18,14 @@ export class ReactionDiffusion {
 
         if (gui) {
             this.guiFolder = gui.addFolder('Reaction Diffusion');
-            const diffusionAControl = this.guiFolder.add(this.computeMaterial.uniforms.uDiffusionA, 'value', 0, 1, 0.01);
-            diffusionAControl.name('A');
-            const diffusionBControl = this.guiFolder.add(this.computeMaterial.uniforms.uDiffusionB, 'value', 0, 1, 0.01);
-            diffusionBControl.name('B');
-            const feedRateControl = this.guiFolder.add(this.computeMaterial.uniforms.uFeedRate, 'value', 0.02, 0.07, 0.0005);
-            feedRateControl.name('Feed Rate');
-            const killRateAControl = this.guiFolder.add(this.computeMaterial.uniforms.uKillRate, 'value', 0.02, 0.07, 0.0005);
-            killRateAControl.name('Kill Rate');
+            this.diffusionAControl = this.guiFolder.add(this.computeMaterial.uniforms.uDiffusionA, 'value', 0, 1, 0.01);
+            this.diffusionAControl.name('A');
+            this.diffusionBControl = this.guiFolder.add(this.computeMaterial.uniforms.uDiffusionB, 'value', 0, 1, 0.01);
+            this.diffusionBControl.name('B');
+            this.feedRateControl = this.guiFolder.add(this.computeMaterial.uniforms.uFeedRate, 'value', 0.02, 0.07, 0.0005);
+            this.feedRateControl.name('Feed Rate');
+            this.killRateAControl = this.guiFolder.add(this.computeMaterial.uniforms.uKillRate, 'value', 0.02, 0.07, 0.0005);
+            this.killRateAControl.name('Kill Rate');
             this.guiFolder.add(this, 'useEmotions');
         }
     }
@@ -39,6 +39,13 @@ export class ReactionDiffusion {
             this.computeMaterial.uniforms.uDiffusionB.value = dB;
             this.computeMaterial.uniforms.uFeedRate.value = feed;
             this.computeMaterial.uniforms.uKillRate.value = kill;
+
+            /*if (this.guiFolder) {
+                this.diffusionAControl.setValue(dA);
+                this.diffusionBControl.setValue(dB);
+                this.feedRateControl.setValue(feed);
+                this.killRateAControl.setValue(kill);
+            }*/
         }
 
         for (let i = 0; i < this.computeStepsInFrame; i++) {

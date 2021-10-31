@@ -7,13 +7,20 @@ let sketch;
 let resizeTimeoutId;
 
 window.addEventListener('load', async () => {
-    EmotionDetection.startEmitionDetection(DEBUG);
-
-    const container = document.body;
-    sketch = new Sketch(container, EmotionDetection);
-    sketch.oninit = () => {
-        sketch.animate(); 
+    try {
+        await EmotionDetection.startEmitionDetection(DEBUG);
+    } catch (e) {
+        console.error(e);
     }
+
+    setTimeout(() => {
+        document.body.removeChild(document.body.querySelector('#loader'));
+        const container = document.body;
+        sketch = new Sketch(container, EmotionDetection);
+        sketch.oninit = () => {
+            sketch.animate(); 
+        }
+    }, 3000);
 });
 
 window.addEventListener('resize', () => {

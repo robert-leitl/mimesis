@@ -103,56 +103,52 @@ async function trackFace() {
 }
 
 const startEmitionDetection = async (debug) => {
-    try {
-        await setupWebcam();
-    } catch(e) {
-        console.error(e);
-        return;
-    }
+    return setupWebcam()
+        .then(async () => {
+            webcamVideoElement.play();
 
-    webcamVideoElement.play();
+            // Load Face Landmarks Detection
+            model = await faceLandmarksDetection.load(
+                faceLandmarksDetection.SupportedPackages.mediapipeFacemesh
+            );
+            // Load Emotion Detection
+            emotionModel = await tf.loadLayersModel('./model/facemo.json');
 
-    // Load Face Landmarks Detection
-    model = await faceLandmarksDetection.load(
-        faceLandmarksDetection.SupportedPackages.mediapipeFacemesh
-    );
-    // Load Emotion Detection
-    emotionModel = await tf.loadLayersModel('./model/facemo.json');
+            trackFace();
 
-    trackFace();
-
-    if (debug) {
-        debugElm = document.createElement('ul');
-        debugValueElms = [];
-        emotions.forEach(label => {
-            const li = document.createElement('li');
-            li.style.display = 'flex';
-            const l = document.createElement('div');
-            l.innerText = label;
-            l.style.width = '4em';
-            l.style.textAlign = 'right';
-            l.style.marginRight = '0.5em';
-            li.appendChild(l);
-            const value = document.createElement('div');
-            value.id = label;
-            value.style.backgroundColor = '#ff4444';
-            value.style.height = '1em';
-            value.style.width = '0em';
-            debugValueElms.push(value);
-            li.appendChild(value);
-            debugElm.appendChild(li);
+            if (debug) {
+                debugElm = document.createElement('ul');
+                debugValueElms = [];
+                emotions.forEach(label => {
+                    const li = document.createElement('li');
+                    li.style.display = 'flex';
+                    const l = document.createElement('div');
+                    l.innerText = label;
+                    l.style.width = '4em';
+                    l.style.textAlign = 'right';
+                    l.style.marginRight = '0.5em';
+                    li.appendChild(l);
+                    const value = document.createElement('div');
+                    value.id = label;
+                    value.style.backgroundColor = '#ff4444';
+                    value.style.height = '1em';
+                    value.style.width = '0em';
+                    debugValueElms.push(value);
+                    li.appendChild(value);
+                    debugElm.appendChild(li);
+                });
+                debugElm.style.width = '10em';
+                debugElm.style.backgroundColor = '#000';
+                debugElm.style.position = 'absolute';
+                debugElm.style.top = 0;
+                debugElm.style.left = 0;
+                debugElm.style.padding = '1em';
+                debugElm.style.margin = 0;
+                debugElm.style.color = '#eee';
+                debugElm.style.listStyle = 'none';
+                document.body.appendChild(debugElm);
+            }
         });
-        debugElm.style.width = '10em';
-        debugElm.style.backgroundColor = '#000';
-        debugElm.style.position = 'absolute';
-        debugElm.style.top = 0;
-        debugElm.style.left = 0;
-        debugElm.style.padding = '1em';
-        debugElm.style.margin = 0;
-        debugElm.style.color = '#eee';
-        debugElm.style.listStyle = 'none';
-        document.body.appendChild(debugElm);
-    }
 };
 
 export const EmotionDetection = {
