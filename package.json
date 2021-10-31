@@ -19,6 +19,7 @@
     "@tensorflow-models/face-landmarks-detection": "0.0.1",
     "@tensorflow/tfjs": "^3.11.0",
     "dat.gui": "^0.7.7",
+    "glsl-noise": "0.0.0",
     "three": "^0.134.0"
   }
 }

@@ -19,17 +19,19 @@ async function setupWebcam() {
                     webcamVideoElement.srcObject = stream;
                     webcamVideoElement.addEventListener( "loadeddata", resolve, false );
                 },
-            error => reject());
+            error => reject(new Error('get user media falied')));
         }
         else {
-            reject();
+            reject(new Error('no user media available'));
         }
     });
 }
 
-const emotions = [ "angry", "disgust", "fear", "happy", "neutral", "sad", "surprise" ];
+const emotions = [ 'angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise' ];
 const emotionProbability = emotions.reduce((map, label) => ({...map, [label]: 0}), {});
+emotionProbability.neutral = 1;
 const debugElm;
+const debugValueElms;
 let emotionModel = null;
 let model = null;
 
@@ -45,8 +47,7 @@ async function predictEmotion( points ) {
     prediction.forEach((p, i) => {
         emotionProbability[emotions[i]] = p;
         if (debugElm) {
-            const value = debugElm.querySelector(`#${emotions[i]}`);
-            value.style.width = `${p * 5}em`;
+            debugValueElms[i].style.width = `${p * 5}em`;
         }
     });
     return emotions[ id ];
@@ -101,8 +102,13 @@ async function trackFace() {
     setTimeout(trackFace, 300);
 }
 
-export const startEmitionDetection = async (debug) => {
-    await setupWebcam();
+const startEmitionDetection = async (debug) => {
+    try {
+        await setupWebcam();
+    } catch(e) {
+        console.error(e);
+        return;
+    }
 
     webcamVideoElement.play();
 
@@ -117,6 +123,7 @@ export const startEmitionDetection = async (debug) => {
 
     if (debug) {
         debugElm = document.createElement('ul');
+        debugValueElms = [];
         emotions.forEach(label => {
             const li = document.createElement('li');
             li.style.display = 'flex';
@@ -131,6 +138,7 @@ export const startEmitionDetection = async (debug) => {
             value.style.backgroundColor = '#ff4444';
             value.style.height = '1em';
             value.style.width = '0em';
+            debugValueElms.push(value);
             li.appendChild(value);
             debugElm.appendChild(li);
         });
@@ -145,4 +153,9 @@ export const startEmitionDetection = async (debug) => {
         debugElm.style.listStyle = 'none';
         document.body.appendChild(debugElm);
     }
+};
+
+export const EmotionDetection = {
+    startEmitionDetection,
+    emotionProbability
 };

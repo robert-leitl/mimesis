@@ -1,4 +1,4 @@
-import { startEmitionDetection } from './sketch/emotion-detection';
+import { EmotionDetection } from './sketch/emotion-detection';
 import { Sketch } from './sketch/sketch';
 
 const DEBUG = true;
@@ -6,9 +6,9 @@ const DEBUG = true;
 let sketch;
 let resizeTimeoutId;
 
-window.addEventListener('load', () => {
-    startEmitionDetection(DEBUG);
-
+window.addEventListener('load', async () => {
+    EmotionDetection.startEmitionDetection(DEBUG);
+    
     const container = document.body;
     sketch = new Sketch(container);
     sketch.oninit = () => {

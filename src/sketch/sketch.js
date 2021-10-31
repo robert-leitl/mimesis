@@ -21,6 +21,7 @@ export class Sketch {
     oninit;
     documentPointerPosition = new Vector2();
 
+    #time = 0;
     #isDestroyed = false;
 
     constructor(container) {
@@ -105,15 +106,17 @@ export class Sketch {
     animate() {
         if (this.#isDestroyed) return;
 
+        this.#time += 0.05;
+
         this.controls.update();
-        this.shaderMaterial.uniforms.uTexture.value = this.reactionDiffusion.compute(this.documentPointerPosition);
+        this.shaderMaterial.uniforms.uTexture.value = this.reactionDiffusion.compute(this.documentPointerPosition, this.#time);
         this.render();
 
         requestAnimationFrame(() => this.animate());
     }
 
     render() {
-        this.shaderMaterial.uniforms.uTime.value += 0.05;
+        this.shaderMaterial.uniforms.uTime.value = this.#time;
         this.renderer.render(this.scene, this.camera);
     }
 

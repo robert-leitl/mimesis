@@ -20,15 +20,16 @@ export class ReactionDiffusion {
             diffusionAControl.name('A');
             const diffusionBControl = this.guiFolder.add(this.computeMaterial.uniforms.uDiffusionB, 'value', 0, 1, 0.01);
             diffusionBControl.name('B');
-            const feedRateControl = this.guiFolder.add(this.computeMaterial.uniforms.uFeedRate, 'value', 0, 0.1, 0.001);
+            const feedRateControl = this.guiFolder.add(this.computeMaterial.uniforms.uFeedRate, 'value', 0.02, 0.07, 0.0005);
             feedRateControl.name('Feed Rate');
-            const killRateAControl = this.guiFolder.add(this.computeMaterial.uniforms.uKillRate, 'value', 0, 0.1, 0.001);
+            const killRateAControl = this.guiFolder.add(this.computeMaterial.uniforms.uKillRate, 'value', 0.02, 0.07, 0.0005);
             killRateAControl.name('Kill Rate');
         }
     }
 
-    compute(pointer) {
+    compute(pointer, time) {
         this.computeMaterial.uniforms.uPointer.value = pointer;
+        this.computeMaterial.uniforms.uTime.value = time;
 
         for (let i = 0; i < this.computeStepsInFrame; i++) {
             const nextRenderTargetIndex = this.currentRenderTargetIndex === 0 ? 1 : 0;
@@ -53,10 +54,11 @@ export class ReactionDiffusion {
                 uResolution: { value: new Vector2(this.computeSize, this.computeSize) },
                 uTexture: { value: null },
                 uPointer: { value: new Vector2() },
-                uDiffusionA: { value: 0.9 },
-                uDiffusionB: { value: 0.5 },
-                uFeedRate: { value: 0.045 },
-                uKillRate: { value: 0.06 }
+                uTime: { value: 0 },
+                uDiffusionA: { value: 1 },
+                uDiffusionB: { value: 0.45 },
+                uFeedRate: { value: 0.0375 },
+                uKillRate: { value: 0.0575 }
             },
             vertexShader: reactionDiffusionVertexShader,
             fragmentShader: reactionDiffusionFragmentShader

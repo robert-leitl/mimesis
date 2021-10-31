@@ -1,7 +1,10 @@
+#pragma glslify: noise = require('./noise.glsl')
+
 varying vec2 vTexelSize;
 
 uniform vec2 uResolution;
 uniform vec2 uPointer;
+uniform float uTime;
 uniform sampler2D uTexture;
 uniform float uDiffusionA;
 uniform float uDiffusionB;
@@ -60,8 +63,22 @@ vec4 drawSeed(vec4 pixel, vec2 seedPosition, vec2 pos) {
     vec4 result = vec4(pixel);
     float dist = distance(seedPosition, pos);
 
-    result.b += 1. - smoothstep(0.05 - .001, 0.05, dist);
+    result.b += 1. - smoothstep(0.005 - .0001, 0.005, dist);
 
+    return result;
+}
+
+vec4 drawNoiseSeed(vec4 pixel, vec2 pos) {
+    vec4 result = vec4(pixel);
+
+    float t = uTime * 0.05;
+    vec2 c = (pos - 0.5) * 2.;
+    vec2 noisePos = vec2((cos(t * 0.5) * .3 + 1.) * c.x, (sin(t * 0.7) * .3 + 1.) * c.y);
+    noisePos.x += noise((sin(c + t * 1.2) * .5 + 1.) * 0.6);
+    noisePos.y += noise((cos(c + t * 0.5) * .5 + 1.) * 0.6);
+    float n = noise(noisePos * 5. + 4.);
+
+    result.b += 1. - smoothstep(0.0, 0.04, n);
     return result;
 }
 
@@ -70,7 +87,9 @@ void main() {
 
     vec4 pixel = react(st);
     pixel = clamp(pixel, 0.0, 1.0);
-    pixel = drawSeed(pixel, (uPointer.xy + 1.) / 2., st);
+    //pixel = drawSeed(pixel, (uPointer.xy + 1.) / 2., st);
+    pixel = drawNoiseSeed(pixel, st);
+    
     gl_FragColor = pixel;
 }
 
