@@ -5,6 +5,8 @@ import reactionDiffusionVertexShader from '../shader/reaction-diffusion-vertex.g
 import reactionDiffusionFragmentShader from '../shader/reaction-diffusion-fragment.glsl';
 
 export class ReactionDiffusion {
+
+    useEmotions = true;
     
     constructor(renderer, gui) {
         this.renderer = renderer;
@@ -24,12 +26,20 @@ export class ReactionDiffusion {
             feedRateControl.name('Feed Rate');
             const killRateAControl = this.guiFolder.add(this.computeMaterial.uniforms.uKillRate, 'value', 0.02, 0.07, 0.0005);
             killRateAControl.name('Kill Rate');
+            this.guiFolder.add(this, 'useEmotions');
         }
     }
 
-    compute(pointer, time) {
+    compute(pointer, time, dA, dB, feed, kill) {
         this.computeMaterial.uniforms.uPointer.value = pointer;
         this.computeMaterial.uniforms.uTime.value = time;
+
+        if (this.useEmotions) {
+            this.computeMaterial.uniforms.uDiffusionA.value = dA;
+            this.computeMaterial.uniforms.uDiffusionB.value = dB;
+            this.computeMaterial.uniforms.uFeedRate.value = feed;
+            this.computeMaterial.uniforms.uKillRate.value = kill;
+        }
 
         for (let i = 0; i < this.computeStepsInFrame; i++) {
             const nextRenderTargetIndex = this.currentRenderTargetIndex === 0 ? 1 : 0;

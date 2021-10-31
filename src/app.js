@@ -8,9 +8,9 @@ let resizeTimeoutId;
 
 window.addEventListener('load', async () => {
     EmotionDetection.startEmitionDetection(DEBUG);
-    
+
     const container = document.body;
-    sketch = new Sketch(container);
+    sketch = new Sketch(container, EmotionDetection);
     sketch.oninit = () => {
         sketch.animate(); 
     }
