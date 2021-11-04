@@ -49,9 +49,10 @@ export class Sketch {
 
     #useCubeMap = true;
 
-    constructor(container, emotionDetector) {
+    constructor(container, emotionDetector, isDebugMode) {
         this.container = container;
         this.emotionDetector = emotionDetector;
+        this.isDebugMode = isDebugMode;
 
         const assets = [
             new TextureLoader().loadAsync(new URL('../assets/test.png', import.meta.url))
@@ -80,10 +81,17 @@ export class Sketch {
 
         if (this.#useCubeMap) {
             this.#initObjectCubeMap();
-            this.cubeReactionDiffusion = new CubeReactionDiffusion(this.renderer, this.gui);
+            this.cubeReactionDiffusion = new CubeReactionDiffusion(
+                this.renderer, 
+                this.isDebugMode ? this.gui : null, 
+                this.emotionDetector !== null
+            );
         } else {
             this.#initObject();
-            this.reactionDiffusion = new ReactionDiffusion(this.renderer, this.gui);
+            this.reactionDiffusion = new ReactionDiffusion(
+                this.renderer, 
+                this.isDebugMode ? this.gui : null
+            );
         }
 
         this.updateSize();
@@ -102,7 +110,19 @@ export class Sketch {
             this.documentPointerPosition.y = -(e.clientY / window.innerHeight) * 2 + 1;
         };
 
+        this.#initGui();
+
         if (this.oninit) this.oninit();
+    }
+
+    #initGui() {
+        if (this.isDebugMode) {
+            this.guiFolder = this.gui.addFolder('Skin Rendering');
+            this.displacementControl = this.guiFolder.add(this.shaderMaterial.uniforms.uDisplacement, 'value', -0.5, 0.5, 0.001);
+            this.displacementControl.name('Displacement');
+
+            this.guiFolder.open();
+        }
     }
 
     #initObject() {
@@ -116,7 +136,8 @@ export class Sketch {
                 uResolution: { value: new Vector2() },
                 uMouse: { value: new Vector2() },
                 uTexture: { value: this.texture },
-                uCubeMap: { value: null }
+                uCubeMap: { value: null },
+                uDisplacement: { value: 0 }
             },
             vertexShader: skinVertexShader,
             fragmentShader: skinFragmentShader
@@ -127,13 +148,14 @@ export class Sketch {
     }
 
     #initObjectCubeMap() {
-        const geometry = new IcosahedronBufferGeometry(0.5, 30);
+        const geometry = new IcosahedronBufferGeometry(0.3, 60);
         this.shaderMaterial = new ShaderMaterial({
             uniforms: {
                 uTime: { value: 1.0 },
                 uResolution: { value: new Vector2() },
                 uMouse: { value: new Vector2() },
-                uCubeMap: { value: null }
+                uCubeMap: { value: null },
+                uDisplacement: { value: .01 }
             },
             vertexShader: cubeSkinVertexShader,
             fragmentShader: cubeSkinFragmentShader
@@ -193,6 +215,8 @@ export class Sketch {
     }
 
     #animationEmotionParams() {
+        if (!this.emotionDetector) return;
+
         const targetEmotionParams = { dA: 0, dB: 0, feed: 0, kill: 0, displacement: 0 };
         const paramKeys = Object.keys(targetEmotionParams);
         let propabilitySum = 0;

@@ -8,8 +8,11 @@ let resizeTimeoutId;
 let startTimeout = 3000;
 
 window.addEventListener('load', async () => {
+    let isEmotionDetectionAvailable = false;
+
     try {
         await EmotionDetection.startEmitionDetection(DEBUG);
+        isEmotionDetectionAvailable = true;
     } catch (e) {
         startTimeout = 0;
         console.error(e);
@@ -18,7 +21,7 @@ window.addEventListener('load', async () => {
     setTimeout(() => {
         document.body.removeChild(document.body.querySelector('#loader'));
         const container = document.body;
-        sketch = new Sketch(container, EmotionDetection);
+        sketch = new Sketch(container, isEmotionDetectionAvailable ? EmotionDetection : null, DEBUG);
         sketch.oninit = () => {
             sketch.animate(); 
         }

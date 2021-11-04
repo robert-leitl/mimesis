@@ -8,11 +8,12 @@ export class CubeReactionDiffusion {
 
     useEmotions = true;
     
-    constructor(renderer, gui) {
+    constructor(renderer, gui, isEmotionDetectionAvailable) {
         this.renderer = renderer;
         this.computeStepsInFrame = 15;
         this.currentRenderTargetIndex = 0;
         this.computeSize = 64;
+        this.useEmotions = isEmotionDetectionAvailable;
 
         this.#init();
 
@@ -27,6 +28,7 @@ export class CubeReactionDiffusion {
             this.killRateAControl = this.guiFolder.add(this.computeMaterial.uniforms.uKillRate, 'value', 0.02, 0.07, 0.0005);
             this.killRateAControl.name('Kill Rate');
             this.guiFolder.add(this, 'useEmotions');
+            this.guiFolder.open();
         }
     }
 

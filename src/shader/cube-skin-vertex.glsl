@@ -2,13 +2,14 @@ varying vec2 vUv;
 varying vec3 vNormal;
 
 uniform samplerCube uCubeMap;
+uniform float uDisplacement;
 
 vec3 distort(vec3 pos) {
     vec3 distortedPos = vec3(pos);
     float displacement = texture(uCubeMap, vNormal).r;
-    displacement = smoothstep(0.3, 1.0, displacement);
+    displacement = smoothstep(0.4, .7, displacement);
 
-    distortedPos += vNormal * displacement * 0.1;
+    distortedPos += vNormal * displacement * uDisplacement;
 
     return distortedPos;
 }
