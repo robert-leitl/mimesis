@@ -1,21 +1,31 @@
 import {
+    BoxBufferGeometry,
+    CubeTexture,
     FileLoader,
+    IcosahedronBufferGeometry,
+    IcosahedronGeometry,
     Mesh,
+    MirroredRepeatWrapping,
     PerspectiveCamera,
     PlaneBufferGeometry,
     Scene,
     ShaderMaterial,
+    SphereBufferGeometry,
     Texture,
     TextureLoader,
     Vector2,
     WebGLRenderer
 } from 'three';
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { VertexTangentsHelper } from 'three/examples/jsm/helpers/VertexTangentsHelper'
 import { ReactionDiffusion } from './reaction-diffusion';
 import * as dat from 'dat.gui';
 
 import skinFragmentShader from '../shader/skin-fragment.glsl';
 import skinVertexShader from '../shader/skin-vertex.glsl';
+import cubeSkinFragmentShader from '../shader/cube-skin-fragment.glsl';
+import cubeSkinVertexShader from '../shader/cube-skin-vertex.glsl';
+import { CubeReactionDiffusion } from './cube-reaction-diffusion';
 
 export class Sketch {
     oninit;
@@ -36,6 +46,8 @@ export class Sketch {
         surprise:   { dA: 0.70, dB: 0.16, feed: 0.0540, kill: 0.0615, displacement: 0.3 }
     };
     #emotionParms = { ...this.#emotionParamTargets.neutral };
+
+    #useCubeMap = true;
 
     constructor(container, emotionDetector) {
         this.container = container;
@@ -62,12 +74,17 @@ export class Sketch {
         );
         this.camera.position.z = 2;
         this.scene = new Scene();
-        this.#initObject();
         this.renderer = new WebGLRenderer();
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.container.appendChild(this.renderer.domElement);
 
-        this.reactionDiffusion = new ReactionDiffusion(this.renderer, this.gui);
+        if (this.#useCubeMap) {
+            this.#initObjectCubeMap();
+            this.cubeReactionDiffusion = new CubeReactionDiffusion(this.renderer, this.gui);
+        } else {
+            this.#initObject();
+            this.reactionDiffusion = new ReactionDiffusion(this.renderer, this.gui);
+        }
 
         this.updateSize();
 
@@ -89,16 +106,37 @@ export class Sketch {
     }
 
     #initObject() {
-        const geometry = new PlaneBufferGeometry(2, 2);
+        //const geometry = new BoxBufferGeometry(0.5, 0.5, 0.5);
+        //const geometry = new SphereBufferGeometry(0.5);
+        //const geometry = new IcosahedronBufferGeometry(0.5, 30);
+        const geometry = new PlaneBufferGeometry(1, 1);
         this.shaderMaterial = new ShaderMaterial({
             uniforms: {
                 uTime: { value: 1.0 },
                 uResolution: { value: new Vector2() },
                 uMouse: { value: new Vector2() },
-                uTexture: { value: this.texture }
+                uTexture: { value: this.texture },
+                uCubeMap: { value: null }
             },
             vertexShader: skinVertexShader,
             fragmentShader: skinFragmentShader
+        });
+
+        const mesh = new Mesh(geometry, this.shaderMaterial);
+        this.scene.add(mesh);
+    }
+
+    #initObjectCubeMap() {
+        const geometry = new IcosahedronBufferGeometry(0.5, 30);
+        this.shaderMaterial = new ShaderMaterial({
+            uniforms: {
+                uTime: { value: 1.0 },
+                uResolution: { value: new Vector2() },
+                uMouse: { value: new Vector2() },
+                uCubeMap: { value: null }
+            },
+            vertexShader: cubeSkinVertexShader,
+            fragmentShader: cubeSkinFragmentShader
         });
 
         const mesh = new Mesh(geometry, this.shaderMaterial);
@@ -125,14 +163,30 @@ export class Sketch {
         this.#animationEmotionParams();
 
         this.controls.update();
-        this.shaderMaterial.uniforms.uTexture.value = this.reactionDiffusion.compute(
-            this.documentPointerPosition, 
-            this.#time,
-            this.#emotionParms.dA,
-            this.#emotionParms.dB,
-            this.#emotionParms.feed,
-            this.#emotionParms.kill
-        );
+        if (this.#useCubeMap) {
+            const reactionDiffusionCubeMap = this.cubeReactionDiffusion.compute(
+                this.documentPointerPosition, 
+                this.#time,
+                this.#emotionParms.dA,
+                this.#emotionParms.dB,
+                this.#emotionParms.feed,
+                this.#emotionParms.kill
+            );
+        
+            this.shaderMaterial.uniforms.uCubeMap.value = reactionDiffusionCubeMap;
+        } else {
+            const reactionDiffusionTexture = this.reactionDiffusion.compute(
+                this.documentPointerPosition, 
+                this.#time,
+                this.#emotionParms.dA,
+                this.#emotionParms.dB,
+                this.#emotionParms.feed,
+                this.#emotionParms.kill
+            );
+        
+            this.shaderMaterial.uniforms.uTexture.value = reactionDiffusionTexture;
+        }
+    
         this.#render();
 
         requestAnimationFrame(() => this.animate());

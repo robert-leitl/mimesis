@@ -1,4 +1,4 @@
-import { DataTexture, Mesh, OrthographicCamera, PlaneBufferGeometry, Scene, ShaderMaterial, WebGLRenderTarget, Vector2, LinearFilter, FloatType, MirroredRepeatWrapping, RGBAFormat, RGBFormat } from "three";
+import { DataTexture, Mesh, OrthographicCamera, PlaneBufferGeometry, Scene, ShaderMaterial, WebGLRenderTarget, Vector2, LinearFilter, FloatType, MirroredRepeatWrapping, RGBAFormat, RGBFormat, RepeatWrapping } from "three";
 import * as dat from 'dat.gui';
 
 import reactionDiffusionVertexShader from '../shader/reaction-diffusion-vertex.glsl';
@@ -91,8 +91,8 @@ export class ReactionDiffusion {
                     minFilter: LinearFilter,
                     magFilter: LinearFilter,
                     type: FloatType,
-                    wrapS: MirroredRepeatWrapping,
-                    wrapT: MirroredRepeatWrapping,
+                    wrapS: RepeatWrapping,
+                    wrapT: RepeatWrapping,
                     depthBuffer: false,
                     stencilBuffer: false
                 })

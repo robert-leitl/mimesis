@@ -1,11 +1,14 @@
 #pragma glslify: noise = require('./noise.glsl')
 
 varying vec2 vTexelSize;
+varying vec3 vNormal;
+varying vec3 vTangent;
+varying vec3 vBitangent;
 
 uniform vec2 uResolution;
 uniform vec2 uPointer;
 uniform float uTime;
-uniform sampler2D uTexture;
+uniform samplerCube uCubeMap;
 uniform float uDiffusionA;
 uniform float uDiffusionB;
 uniform float uFeedRate;
@@ -38,7 +41,7 @@ vec2 c2uv(vec3 c) {
     return uv;
 }
 
-vec4 laplacian(vec2 pos, vec3 dir, vec2 pol) {
+vec4 laplacian(vec3 dir) {
     vec4 result = vec4(0., 0., 0., 1.);
 
     vec3 kernel[3] = vec3[](
@@ -47,49 +50,38 @@ vec4 laplacian(vec2 pos, vec3 dir, vec2 pol) {
         vec3(.05, .2, .05)
     );
 
-    /*float a = 0.01;
-    pol.y = acos(pol.y);
-    vec2 pp = vec2(RECIPROCAL_PI2, .5);
-    vec2 p1 = ((vec2(pol.x - a, cos(pol.y - a) + 1.))) * pp;
-    vec2 p2 = ((vec2(pol.x    , cos(pol.y - a) + 1.))) * pp;
-    vec2 p3 = ((vec2(pol.x + a, cos(pol.y - a) + 1.))) * pp;
-    vec2 p4 = ((vec2(pol.x - a, cos(pol.y    ) + 1.))) * pp;
-    vec2 p5 = ((vec2(pol.x + a, cos(pol.y    ) + 1.))) * pp;
-    vec2 p6 = ((vec2(pol.x - a, cos(pol.y + a) + 1.))) * pp;
-    vec2 p7 = ((vec2(pol.x    , cos(pol.y + a) + 1.))) * pp;
-    vec2 p8 = ((vec2(pol.x + a, cos(pol.y + a) + 1.))) * pp;
+    float offset = 0.025;
 
+    vec3 n = dir;
+    vec3 t = normalize(vTangent) * offset;
+    vec3 b = normalize(vBitangent) * offset;
+    vec3 d1 = n - t - b;
+    vec3 d2 = n - b;
+    vec3 d3 = n + t - b;
+    vec3 d4 = n - t;
+    vec3 d5 = n + t;
+    vec3 d6 = n + t + b;
+    vec3 d7 = n + b;
+    vec3 d8 = n - t + b;
 
-    result += texture2D(uTexture, p1) * kernel[0][0];
-    result += texture2D(uTexture, p2) * kernel[0][1];
-    result += texture2D(uTexture, p3) * kernel[0][2];
-    result += texture2D(uTexture, p4) * kernel[1][0];
+    result += texture(uCubeMap, d1) * kernel[0][0];
+    result += texture(uCubeMap, d2) * kernel[0][1];
+    result += texture(uCubeMap, d3) * kernel[0][2];
+    result += texture(uCubeMap, d4) * kernel[1][0];
 
-    result += texture2D(uTexture, p5) * kernel[1][2];
-    result += texture2D(uTexture, p6) * kernel[2][0];
-    result += texture2D(uTexture, p7) * kernel[2][1];
-    result += texture2D(uTexture, p8) * kernel[2][2];*/
+    result += texture(uCubeMap, d5) * kernel[1][2];
+    result += texture(uCubeMap, d6) * kernel[2][0];
+    result += texture(uCubeMap, d7) * kernel[2][1];
+    result += texture(uCubeMap, d8) * kernel[2][2];
 
-    
-    result += texture2D(uTexture, vec2(pos.x - vTexelSize.x, pos.y - vTexelSize.y)) * kernel[0][0];
-    result += texture2D(uTexture, vec2(pos.x, pos.y - vTexelSize.y)) * kernel[0][1];
-    result += texture2D(uTexture, vec2(pos.x + vTexelSize.x, pos.y - vTexelSize.y)) * kernel[0][2];
-    result += texture2D(uTexture, vec2(pos.x - vTexelSize.x, pos.y)) * kernel[1][0];
-
-    result += texture2D(uTexture, vec2(pos.x + vTexelSize.x, pos.y)) * kernel[1][2];
-    result += texture2D(uTexture, vec2(pos.x - vTexelSize.x, pos.y + vTexelSize.y)) * kernel[2][0];
-    result += texture2D(uTexture, vec2(pos.x, pos.y + vTexelSize.y)) * kernel[2][1];
-    result += texture2D(uTexture, vec2(pos.x + vTexelSize.x, pos.y + vTexelSize.y)) * kernel[2][2];
-    
-
-    result += texture2D(uTexture, pos) * kernel[1][1];
+    result += texture(uCubeMap, n) * kernel[1][1];
 
     return result;
 }
 
-vec4 react(vec2 pos, vec3 dir, vec2 pol) {
-    vec4 result = texture2D(uTexture, pos);
-    vec4 convolution = laplacian(pos, dir, pol);
+vec4 react(vec3 dir) {
+    vec4 result = texture(uCubeMap, dir);
+    vec4 convolution = laplacian(dir);
 
     float a = result[0];
     float b = result[2];
@@ -138,31 +130,30 @@ vec4 drawNoiseSeed(vec4 pixel, vec3 dir) {
     vec4 result = vec4(pixel);
 
     float t = uTime * 0.05;
+    float a = 0.8;
     vec3 c = dir;
     vec3 noisePos = vec3(
-        (cos(t * 0.5) * .3 + 1.) * c.x, 
-        (sin(t * 0.7) * .3 + 1.) * c.y,
-        (sin(t * 0.7) * .3 + 1.) * c.z
+        (cos(t * 0.5) * a + 1.) * c.x, 
+        (sin(t * 0.7) * a + 1.) * c.y,
+        (sin(t * 0.7) * a + 1.) * c.z
         );
     noisePos.x += noise((sin(c + t * 1.2) * .5 + 1.) * 0.6);
     noisePos.y += noise((cos(c + t * 0.5) * .5 + 1.) * 0.6);
     noisePos.z += noise((cos(c + t * 2.5) * .5 + 1.) * 0.6);
     float n = noise(noisePos * 5. + 4.);
 
-    result.b += 1. - smoothstep(0.0, 0.04, n);
+    result.b += 1. - smoothstep(0.0, 0.05, n);
     return result;
 }
 
 void main() {
     vec2 st = gl_FragCoord.xy / uResolution.xy;
-    vec2 pol = vec2(st.x * PI_2, st.y * PI);
-    vec3 dir = vec3(sin(pol.y) * sin(pol.x), cos(pol.y), sin(pol.y) * cos(pol.x));
+    vec3 normal = normalize(vNormal);
 
-    vec4 pixel = react(st, dir, pol);
-    pixel = clamp(pixel, 0.0, 1.0);
-    //pixel = drawSeed(pixel, (uPointer.xy + 1.) / 2., st);
-    pixel = drawNoiseSeed(pixel, st);
+    vec4 color = react(normal);
+    color = clamp(color, 0.0, 1.0);
+    color = drawNoiseSeed(color, normal);
 
-    gl_FragColor = pixel;
+    gl_FragColor = color;
 }
 

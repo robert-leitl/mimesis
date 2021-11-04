@@ -5,11 +5,13 @@ const DEBUG = true;
 
 let sketch;
 let resizeTimeoutId;
+let startTimeout = 3000;
 
 window.addEventListener('load', async () => {
     try {
         await EmotionDetection.startEmitionDetection(DEBUG);
     } catch (e) {
+        startTimeout = 0;
         console.error(e);
     }
 
@@ -20,7 +22,7 @@ window.addEventListener('load', async () => {
         sketch.oninit = () => {
             sketch.animate(); 
         }
-    }, 3000);
+    }, startTimeout);
 });
 
 window.addEventListener('resize', () => {
