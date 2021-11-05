@@ -77,7 +77,9 @@ export class CubeReactionDiffusion {
             fragmentShader: reactionDiffusionFragmentShader,
             side: BackSide
         });
-        //const geometry = new SphereBufferGeometry(1, 10, 10);
+
+        // make a sphere geometry from a box by moving each
+        // vertex to the length of the radius
         const geometry = new BoxBufferGeometry(1, 1, 1, 20, 20, 20);
         const radius = 1;
         const positions = geometry.attributes.position;
@@ -103,6 +105,8 @@ export class CubeReactionDiffusion {
         geometry.attributes.position.needsUpdate = true;
         geometry.attributes.normal.needsUpdate = true;
         geometry.attributes.tangent.needsUpdate = true;
+
+        // init the mesh and render targets
         this.computeMesh = new Mesh(geometry, this.computeMaterial);
         this.computeScene = new Scene();
         this.computeScene.add(this.computeMesh);

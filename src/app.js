@@ -10,13 +10,13 @@ let startTimeout = 3000;
 window.addEventListener('load', async () => {
     let isEmotionDetectionAvailable = false;
 
-    /*try {
+    try {
         await EmotionDetection.startEmitionDetection(DEBUG);
         isEmotionDetectionAvailable = true;
-    } catch (e) {*/
+    } catch (e) {
         startTimeout = 0;
-        //console.error(e);
-    //}
+        console.error(e);
+    }
 
     setTimeout(() => {
         document.body.removeChild(document.body.querySelector('#loader'));

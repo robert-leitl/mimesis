@@ -14,33 +14,6 @@ uniform float uDiffusionB;
 uniform float uFeedRate;
 uniform float uKillRate;
 
-#define PI 3.14159265359
-#define PI_2 6.2831853072
-#define PI_05 1.5707963268
-#define RECIPROCAL_PI 0.3183098861837907
-#define RECIPROCAL_PI2 0.15915494309189535
-
-// converts [phi,cos theta] into [x,y,z] for unit sphere
-vec3 s2c(vec2 s) {
-    float sinTheta = sqrt(1.0 - s.y * s.y);
-    return vec3(cos(s.x) * sinTheta,
-                sin(s.x) * sinTheta,
-                s.y);
-}
-
-// converts [x,y,z] into [phi, cos theta] for unit sphere
-vec2 c2s(vec3 c) {
-    return vec2(atan(c.y, c.x),
-                c.z);
-}
-
-vec2 c2uv(vec3 c) {
-    vec2 uv = c2s(c);
-    uv.y = acos(uv.y);
-    uv *= vec2(RECIPROCAL_PI2, RECIPROCAL_PI);
-    return uv;
-}
-
 vec4 laplacian(vec3 dir) {
     vec4 result = vec4(0., 0., 0., 1.);
 
@@ -52,6 +25,8 @@ vec4 laplacian(vec3 dir) {
 
     float offset = 0.02;
 
+    // calculate the directions around the normal
+    // to apply the filter kernel to
     vec3 n = dir;
     vec3 t = normalize(vTangent) * offset;
     vec3 b = normalize(vBitangent) * offset;
@@ -79,6 +54,7 @@ vec4 laplacian(vec3 dir) {
     return result;
 }
 
+// reaction diffusion within the cube map for the given direction
 vec4 react(vec3 dir) {
     vec4 result = texture(uCubeMap, dir);
     vec4 convolution = laplacian(dir);
@@ -103,29 +79,7 @@ vec4 react(vec3 dir) {
     return result;
 }
 
-vec4 drawSeed(vec4 pixel, vec2 seedPosition, vec2 pos) {
-    vec4 result = vec4(pixel);
-    float dist = distance(seedPosition, pos);
-
-    result.b += 1. - smoothstep(0.005 - .0001, 0.005, dist);
-
-    return result;
-}
-
-vec4 drawNoiseSeed(vec4 pixel, vec2 pos) {
-    vec4 result = vec4(pixel);
-
-    float t = uTime * 0.05;
-    vec2 c = (pos - 0.5) * 2.;
-    vec2 noisePos = vec2((cos(t * 0.5) * .3 + 1.) * c.x, (sin(t * 0.7) * .3 + 1.) * c.y);
-    noisePos.x += noise((sin(c + t * 1.2) * .5 + 1.) * 0.6);
-    noisePos.y += noise((cos(c + t * 0.5) * .5 + 1.) * 0.6);
-    float n = noise(noisePos * 5. + 4.);
-
-    result.b += 1. - smoothstep(0.0, 0.04, n);
-    return result;
-}
-
+// draws small animated noise seeds
 vec4 drawNoiseSeed(vec4 pixel, vec3 dir) {
     vec4 result = vec4(pixel);
 
@@ -142,7 +96,7 @@ vec4 drawNoiseSeed(vec4 pixel, vec3 dir) {
     noisePos.z += noise((cos(c + t * 2.5) * .5 + 1.) * 0.6);
     float n = noise(noisePos * 5. + 4.);
 
-    result.b += 1. - smoothstep(0.0, 0.05, n);
+    result.b += 1. - smoothstep(0.0, 0.03, n);
     return result;
 }
 

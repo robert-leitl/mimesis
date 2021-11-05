@@ -9,15 +9,6 @@ attribute vec3 tangent;
 
 uniform vec2 uResolution;
 
-// https://sciencing.com/plane-3-points-8123924.html
-vec3 getRandomPerpendicular(vec3 n, vec3 b) {
-    float r1 = noise(n.x);
-    float r2 = noise(n.z);
-    vec3 t = vec3(r1, r2, 0.);
-    t.z = (-n.x * t.x - n.y * t.y) / n.z;
-    return t;
-}
-
 mat4 rotationMatrix(vec3 axis, float angle) {
     axis = normalize(axis);
     float s = sin(angle);
@@ -39,7 +30,10 @@ void main() {
     vTexelSize = vec2(1. / uResolution);
     vNormal = normal;
     vTangent = tangent;
-    vTangent = rotate(tangent, normal, noise(position));
+
+    // randomly rotate the tangent around the normal
+    // to get some variation and ease out texture inconsistencies
+    vTangent = rotate(tangent, normal, noise(position * 10.));
     vBitangent = cross(vNormal, vTangent);
 
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
