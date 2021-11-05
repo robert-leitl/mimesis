@@ -14,10 +14,12 @@ import {
     Texture,
     TextureLoader,
     Vector2,
+    Vector3,
     WebGLRenderer
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { VertexTangentsHelper } from 'three/examples/jsm/helpers/VertexTangentsHelper'
+import { VertexNormalsHelper } from 'three/examples/jsm/helpers/VertexNormalsHelper'
 import { ReactionDiffusion } from './reaction-diffusion';
 import * as dat from 'dat.gui';
 
@@ -76,7 +78,7 @@ export class Sketch {
         this.camera.position.z = 2;
         this.scene = new Scene();
         this.renderer = new WebGLRenderer();
-        this.renderer.setPixelRatio(window.devicePixelRatio);
+        this.renderer.setPixelRatio(Math.min(1, window.devicePixelRatio));
         this.container.appendChild(this.renderer.domElement);
 
         if (this.#useCubeMap) {
@@ -118,7 +120,7 @@ export class Sketch {
     #initGui() {
         if (this.isDebugMode) {
             this.guiFolder = this.gui.addFolder('Skin Rendering');
-            this.displacementControl = this.guiFolder.add(this.shaderMaterial.uniforms.uDisplacement, 'value', -0.5, 0.5, 0.001);
+            this.displacementControl = this.guiFolder.add(this.shaderMaterial.uniforms.uDisplacement, 'value', -0.1, 0.1, 0.001);
             this.displacementControl.name('Displacement');
 
             this.guiFolder.open();
@@ -149,6 +151,34 @@ export class Sketch {
 
     #initObjectCubeMap() {
         const geometry = new IcosahedronBufferGeometry(0.3, 60);
+
+        /*const geometry = new BoxBufferGeometry(1, 1, 1, 10, 10, 10);
+        const radius = 0.4;
+        const positions = geometry.attributes.position;
+        const normals = geometry.attributes.normal;
+        const l = positions.count * positions.itemSize;
+        for(let i=0; i<l; i+=positions.itemSize) {
+            const v = new Vector3(
+                positions.array[i + 0],
+                positions.array[i + 1],
+                positions.array[i + 2]
+            );
+            v.normalize();
+            normals.array[i + 0] = v.x;
+            normals.array[i + 1] = v.y;
+            normals.array[i + 2] = v.z;
+
+            v.multiplyScalar(radius);
+            positions.array[i + 0] = v.x;
+            positions.array[i + 1] = v.y;
+            positions.array[i + 2] = v.z;
+        }
+        //geometry.computeVertexNormals();
+        geometry.computeTangents();
+        geometry.attributes.position.needsUpdate = true;
+        geometry.attributes.normal.needsUpdate = true;
+        geometry.attributes.tangent.needsUpdate = true;*/
+
         this.shaderMaterial = new ShaderMaterial({
             uniforms: {
                 uTime: { value: 1.0 },
@@ -163,6 +193,13 @@ export class Sketch {
 
         const mesh = new Mesh(geometry, this.shaderMaterial);
         this.scene.add(mesh);
+
+        /*const helper = new VertexTangentsHelper(mesh, 0.01);
+        this.scene.add(helper);
+        this.scene.add(mesh);
+
+        const helper2 = new VertexNormalsHelper(mesh, 0.05, 0xff0000);
+        this.scene.add(helper2);*/
     }
 
     updateSize() {

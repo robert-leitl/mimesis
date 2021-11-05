@@ -50,7 +50,7 @@ vec4 laplacian(vec3 dir) {
         vec3(.05, .2, .05)
     );
 
-    float offset = 0.025;
+    float offset = 0.02;
 
     vec3 n = dir;
     vec3 t = normalize(vTangent) * offset;

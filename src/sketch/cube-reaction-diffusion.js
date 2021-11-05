@@ -1,4 +1,4 @@
-import { DataTexture, Mesh, OrthographicCamera, PlaneBufferGeometry, Scene, ShaderMaterial, WebGLRenderTarget, Vector2, LinearFilter, FloatType, MirroredRepeatWrapping, RGBAFormat, RGBFormat, RepeatWrapping, SphereBufferGeometry, CubeCamera, WebGLCubeRenderTarget, BackSide, CubeTexture, IcosahedronBufferGeometry } from "three";
+import { DataTexture, Mesh, OrthographicCamera, PlaneBufferGeometry, Scene, ShaderMaterial, WebGLRenderTarget, Vector2, LinearFilter, FloatType, MirroredRepeatWrapping, RGBAFormat, RGBFormat, RepeatWrapping, SphereBufferGeometry, CubeCamera, WebGLCubeRenderTarget, BackSide, CubeTexture, IcosahedronBufferGeometry, BoxBufferGeometry, BoxGeometry, Vector3 } from "three";
 import * as dat from 'dat.gui';
 
 import reactionDiffusionVertexShader from '../shader/cube-reaction-diffusion-vertex.glsl';
@@ -77,8 +77,32 @@ export class CubeReactionDiffusion {
             fragmentShader: reactionDiffusionFragmentShader,
             side: BackSide
         });
-        const geometry = new SphereBufferGeometry(1, 10, 10);
+        //const geometry = new SphereBufferGeometry(1, 10, 10);
+        const geometry = new BoxBufferGeometry(1, 1, 1, 20, 20, 20);
+        const radius = 1;
+        const positions = geometry.attributes.position;
+        const normals = geometry.attributes.normal;
+        const l = positions.count * positions.itemSize;
+        for(let i=0; i<l; i+=positions.itemSize) {
+            const v = new Vector3(
+                positions.array[i + 0],
+                positions.array[i + 1],
+                positions.array[i + 2]
+            );
+            v.normalize();
+            normals.array[i + 0] = v.x;
+            normals.array[i + 1] = v.y;
+            normals.array[i + 2] = v.z;
+
+            v.multiplyScalar(radius);
+            positions.array[i + 0] = v.x;
+            positions.array[i + 1] = v.y;
+            positions.array[i + 2] = v.z;
+        }
         geometry.computeTangents();
+        geometry.attributes.position.needsUpdate = true;
+        geometry.attributes.normal.needsUpdate = true;
+        geometry.attributes.tangent.needsUpdate = true;
         this.computeMesh = new Mesh(geometry, this.computeMaterial);
         this.computeScene = new Scene();
         this.computeScene.add(this.computeMesh);

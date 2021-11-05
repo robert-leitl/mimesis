@@ -42,4 +42,4 @@ float noise(vec3 p){
     return o4.y * d.y + o4.x * (1.0 - d.y);
 }
 
-#pragma glslify: export(noise)
+#pragma glslify: export(noise);
