@@ -49,11 +49,13 @@ export class Sketch {
         this.isDebugMode = isDebugMode;
 
         const assets = [
-            new TextureLoader().loadAsync(new URL('../assets/test.png', import.meta.url))
+            new TextureLoader().loadAsync(new URL('../assets/normal_leather.jpg', import.meta.url)),
+            new TextureLoader().loadAsync(new URL('../assets/matcap.png', import.meta.url))
         ];
 
         Promise.all(assets).then((res) => {
-            this.texture = res[0];
+            this.normalTexture = res[0];
+            this.matcapTexture = res[1];
             this.#init();
         });
 
@@ -112,14 +114,46 @@ export class Sketch {
     }
 
     #initObject() {
-        const geometry = new IcosahedronBufferGeometry(0.3, 60);
+        //const geometry = new SphereBufferGeometry(0.3, 64, 64);
+
+        // make a sphere geometry from a box by moving each
+        // vertex to the length of the radius
+        const geometry = new BoxBufferGeometry(1, 1, 1, 60, 60, 60);
+        const radius = 0.3;
+        const positions = geometry.attributes.position;
+        const normals = geometry.attributes.normal;
+        const l = positions.count * positions.itemSize;
+        for(let i=0; i<l; i+=positions.itemSize) {
+            const v = new Vector3(
+                positions.array[i + 0],
+                positions.array[i + 1],
+                positions.array[i + 2]
+            );
+            v.normalize();
+            normals.array[i + 0] = v.x;
+            normals.array[i + 1] = v.y;
+            normals.array[i + 2] = v.z;
+
+            v.multiplyScalar(radius);
+            positions.array[i + 0] = v.x;
+            positions.array[i + 1] = v.y;
+            positions.array[i + 2] = v.z;
+        }
+        geometry.computeTangents();
+        geometry.attributes.position.needsUpdate = true;
+        geometry.attributes.normal.needsUpdate = true;
+        geometry.attributes.tangent.needsUpdate = true;
+
+
         this.shaderMaterial = new ShaderMaterial({
             uniforms: {
                 uTime: { value: 1.0 },
                 uResolution: { value: new Vector2() },
                 uMouse: { value: new Vector2() },
                 uCubeMap: { value: null },
-                uDisplacement: { value: .01 }
+                uDisplacement: { value: .01 },
+                uNormalTexture: { value: this.normalTexture },
+                uMatcapTexture: { value: this.matcapTexture }
             },
             vertexShader: cubeSkinVertexShader,
             fragmentShader: cubeSkinFragmentShader
