@@ -30,8 +30,6 @@ async function setupWebcam() {
 const emotions = [ 'angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise' ];
 const emotionProbability = emotions.reduce((map, label) => ({...map, [label]: 0}), {});
 emotionProbability.neutral = 1;
-const debugElm;
-const debugValueElms;
 let emotionModel = null;
 let model = null;
 
@@ -46,9 +44,6 @@ async function predictEmotion( points ) {
     let id = prediction.indexOf( Math.max( ...prediction ) );
     prediction.forEach((p, i) => {
         emotionProbability[emotions[i]] = p;
-        if (debugElm) {
-            debugValueElms[i].style.width = `${p * 5}em`;
-        }
     });
     return emotions[ id ];
 }
@@ -93,18 +88,24 @@ async function trackFace() {
 
     if( points ) {
         let emotion = await predictEmotion( points );
-        //console.log( `Detected: ${emotion}` );
-    }
-    else {
-        //console.log( "No Face" );
     }
 
     setTimeout(trackFace, 300);
 }
 
-const startEmitionDetection = async (debug) => {
+const startEmitionDetection = async (pane) => {
     return setupWebcam()
         .then(async () => {
+            if (pane) {
+                paneFolder = pane.addFolder({ title: 'Emotion Detection ', expand: true });
+                paneFolder.addMonitor(emotionProbability, 'angry', { view: 'graph', min: 0, max: 1, });
+                paneFolder.addMonitor(emotionProbability, 'fear', { view: 'graph', min: 0, max: 1, });
+                paneFolder.addMonitor(emotionProbability, 'happy', { view: 'graph', min: 0, max: 1, });
+                paneFolder.addMonitor(emotionProbability, 'neutral', { view: 'graph', min: 0, max: 1, });
+                paneFolder.addMonitor(emotionProbability, 'sad', { view: 'graph', min: 0, max: 1, });
+                paneFolder.addMonitor(emotionProbability, 'surprise', { view: 'graph', min: 0, max: 1, });
+            }
+
             webcamVideoElement.play();
 
             // Load Face Landmarks Detection
@@ -115,39 +116,6 @@ const startEmitionDetection = async (debug) => {
             emotionModel = await tf.loadLayersModel('./model/facemo.json');
 
             trackFace();
-
-            if (debug) {
-                debugElm = document.createElement('ul');
-                debugValueElms = [];
-                emotions.forEach(label => {
-                    const li = document.createElement('li');
-                    li.style.display = 'flex';
-                    const l = document.createElement('div');
-                    l.innerText = label;
-                    l.style.width = '4em';
-                    l.style.textAlign = 'right';
-                    l.style.marginRight = '0.5em';
-                    li.appendChild(l);
-                    const value = document.createElement('div');
-                    value.id = label;
-                    value.style.backgroundColor = '#ff4444';
-                    value.style.height = '1em';
-                    value.style.width = '0em';
-                    debugValueElms.push(value);
-                    li.appendChild(value);
-                    debugElm.appendChild(li);
-                });
-                debugElm.style.width = '10em';
-                debugElm.style.backgroundColor = '#000';
-                debugElm.style.position = 'absolute';
-                debugElm.style.top = 0;
-                debugElm.style.left = 0;
-                debugElm.style.padding = '1em';
-                debugElm.style.margin = 0;
-                debugElm.style.color = '#eee';
-                debugElm.style.listStyle = 'none';
-                document.body.appendChild(debugElm);
-            }
         });
 };
 

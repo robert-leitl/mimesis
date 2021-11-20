@@ -12,7 +12,7 @@ export class CubeReactionDiffusion {
     
     constructor(renderer, pane, isEmotionDetectionAvailable) {
         this.renderer = renderer;
-        this.computeStepsInFrame = 10;
+        this.computeStepsInFrame = 20;
         this.currentRenderTargetIndex = 0;
         this.computeSize = 64;
         this.useEmotions = isEmotionDetectionAvailable;
@@ -59,7 +59,7 @@ export class CubeReactionDiffusion {
         }
     }
 
-    compute(pointer, time, dA, dB, feed, kill) {
+    compute(pointer, time, dA, dB, feed, kill, flowSpeed) {
         this.computeMaterial.uniforms.uPointer.value = pointer;
         this.computeMaterial.uniforms.uTime.value = time;
 
@@ -68,6 +68,7 @@ export class CubeReactionDiffusion {
             this.computeMaterial.uniforms.uDiffusionB.value = dB;
             this.computeMaterial.uniforms.uFeedRate.value = feed;
             this.computeMaterial.uniforms.uKillRate.value = kill;
+            this.computeMaterial.uniforms.uFlowSpeed.value = flowSpeed;
         } else if (this.usePointer) {
             this.computeMaterial.uniforms.uDiffusionA.value = 1;
             this.computeMaterial.uniforms.uDiffusionB.value += (Math.min(0.45, 0.4 + this.pointerPosition.x / 5) - this.computeMaterial.uniforms.uDiffusionB.value) / 10;

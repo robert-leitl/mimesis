@@ -1,5 +1,6 @@
 import { EmotionDetection } from './sketch/emotion-detection';
 import { Sketch } from './sketch/sketch';
+import { Pane } from 'tweakpane';
 
 const DEBUG = true;
 
@@ -10,8 +11,13 @@ let startTimeout = 3000;
 window.addEventListener('load', async () => {
     let isEmotionDetectionAvailable = false;
 
+    let pane;
+    if (DEBUG) {
+        pane = new Pane({ title: 'Settings' });
+    }
+
     try {
-        await EmotionDetection.startEmitionDetection(DEBUG);
+        await EmotionDetection.startEmitionDetection(pane);
         isEmotionDetectionAvailable = true;
     } catch (e) {
         startTimeout = 0;
@@ -21,7 +27,7 @@ window.addEventListener('load', async () => {
     setTimeout(() => {
         document.body.removeChild(document.body.querySelector('#loader'));
         const container = document.body;
-        sketch = new Sketch(container, isEmotionDetectionAvailable ? EmotionDetection : null, DEBUG);
+        sketch = new Sketch(container, isEmotionDetectionAvailable ? EmotionDetection : null, pane);
         sketch.oninit = () => {
             sketch.animate(); 
         }

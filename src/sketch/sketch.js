@@ -22,8 +22,6 @@ import {
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { VertexTangentsHelper } from 'three/examples/jsm/helpers/VertexTangentsHelper'
 import { VertexNormalsHelper } from 'three/examples/jsm/helpers/VertexNormalsHelper'
-import * as dat from 'dat.gui';
-import { Pane } from 'tweakpane';
 
 import cubeSkinFragmentShader from '../shader/cube-skin-fragment.glsl';
 import cubeSkinVertexShader from '../shader/cube-skin-vertex.glsl';
@@ -37,19 +35,21 @@ export class Sketch {
     #isDestroyed = false;
 
     #emotionParamTargets = {
-        angry:      { dA: 1.00, dB: 0.59, feed: 0.0200, kill: 0.0515, displacement: 0.05 },
-        fear:       { dA: 1.00, dB: 0.23, feed: 0.0265, kill: 0.0650, displacement: 0.03 },
-        happy:      { dA: 0.75, dB: 0.46, feed: 0.0540, kill: 0.0615, displacement: 0.02 },
-        neutral:    { dA: 1.00, dB: 0.45, feed: 0.0375, kill: 0.0575, displacement: 0.01 },
-        sad:        { dA: 0.72, dB: 0.19, feed: 0.0375, kill: 0.0605, displacement: 0.01 },
-        surprise:   { dA: 0.70, dB: 0.16, feed: 0.0540, kill: 0.0615, displacement: -0.01 }
+        angry:      { dA: 1.00, dB: 0.59, feed: 0.0200, kill: 0.0515, displacement: 0.04, flowSpeed: 0.002 },
+        fear:       { dA: 1.00, dB: 0.23, feed: 0.0265, kill: 0.0650, displacement: 0.02, flowSpeed: 0.000 },
+        happy:      { dA: 0.75, dB: 0.46, feed: 0.0540, kill: 0.0615, displacement: 0.015, flowSpeed: 0.0007 },
+        neutral:    { dA: 1.00, dB: 0.45, feed: 0.0375, kill: 0.0575, displacement: 0.01, flowSpeed: 0.0005 },
+        sad:        { dA: 0.72, dB: 0.19, feed: 0.0375, kill: 0.0605, displacement: -0.005, flowSpeed: -0.0005 },
+        surprise:   { dA: 0.70, dB: 0.16, feed: 0.0540, kill: 0.0615, displacement: -0.01, flowSpeed: 0.000 }
     };
-    #emotionParms = { ...this.#emotionParamTargets.neutral };
+    #emotionParmsL0 = { ...this.#emotionParamTargets.neutral };
+    #emotionParmsL1 = { ...this.#emotionParamTargets.neutral };
+    #emotionParmsL2 = { ...this.#emotionParamTargets.neutral };
 
-    constructor(container, emotionDetector, isDebugMode) {
+    constructor(container, emotionDetector, pane) {
         this.container = container;
         this.emotionDetector = emotionDetector;
-        this.isDebugMode = isDebugMode;
+        this.pane = pane;
 
         const assets = [
             new TextureLoader().loadAsync(new URL('../assets/normal_leather.jpg', import.meta.url)),
@@ -61,10 +61,6 @@ export class Sketch {
             this.matcapTexture = res[1];
             this.#init();
         });
-
-        if (this.isDebugMode) {
-            this.pane = new Pane({ title: 'Settings' });
-        }
     }
 
     #init() {
@@ -113,7 +109,7 @@ export class Sketch {
     }
 
     #initGui() {
-        if (this.isDebugMode) {
+        if (this.pane) {
             this.paneFolder = this.pane.addFolder({ title: 'Skin Rendering', expanded: true });
             this.paneFolder.addInput(
                 this.shaderMaterial.uniforms.uDisplacement, 
@@ -197,20 +193,26 @@ export class Sketch {
         const reactionDiffusionCubeMap = this.cubeReactionDiffusion.compute(
             this.documentPointerPosition, 
             this.#time,
-            this.#emotionParms.dA,
-            this.#emotionParms.dB,
-            this.#emotionParms.feed,
-            this.#emotionParms.kill
+            this.#emotionParmsL0.dA,
+            this.#emotionParmsL0.dB,
+            this.#emotionParmsL0.feed,
+            this.#emotionParmsL0.kill,
+            this.#emotionParmsL2.flowSpeed
         );
 
         this.shaderMaterial.uniforms.uCubeMap.value = reactionDiffusionCubeMap;
     
-        if (!this.isDebugMode) {
-            this.shaderMaterial.uniforms.uDisplacement.value = this.#emotionParms.displacement;
+        if (this.emotionDetector !== null) {
+            this.shaderMaterial.uniforms.uDisplacement.value = this.#emotionParmsL0.displacement;
         }
 
         this.scene.rotation.y -= 0.003;
         this.mesh.position.y = Math.sin(this.#time / 3) * 0.03;
+        this.mesh.scale.set(
+            1 + this.#emotionParmsL2.displacement * 20,
+            1 + this.#emotionParmsL2.displacement * 20,
+            1 + this.#emotionParmsL2.displacement * 20
+        )
     
         this.#render();
 
@@ -220,7 +222,7 @@ export class Sketch {
     #animationEmotionParams() {
         if (!this.emotionDetector) return;
 
-        const targetEmotionParams = { dA: 0, dB: 0, feed: 0, kill: 0, displacement: 0 };
+        const targetEmotionParams = { dA: 0, dB: 0, feed: 0, kill: 0, displacement: 0, flowSpeed: 0 };
         const paramKeys = Object.keys(targetEmotionParams);
         let propabilitySum = 0;
         Object.entries(this.#emotionParamTargets).forEach(([key, params]) => {
@@ -233,7 +235,9 @@ export class Sketch {
 
         paramKeys.forEach(paramKey => {
             targetEmotionParams[paramKey] /= propabilitySum;
-            this.#emotionParms[paramKey] += (targetEmotionParams[paramKey] - this.#emotionParms[paramKey]) / 10;
+            this.#emotionParmsL0[paramKey] += (targetEmotionParams[paramKey] - this.#emotionParmsL0[paramKey]) / 20;
+            this.#emotionParmsL1[paramKey] += (this.#emotionParmsL0[paramKey] - this.#emotionParmsL1[paramKey]) / 20;
+            this.#emotionParmsL2[paramKey] += (this.#emotionParmsL1[paramKey] - this.#emotionParmsL2[paramKey]) / 20;
         });
     }
 
