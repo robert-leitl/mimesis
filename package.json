@@ -20,6 +20,7 @@
     "@tensorflow/tfjs": "^3.11.0",
     "dat.gui": "^0.7.7",
     "glsl-noise": "0.0.0",
-    "three": "^0.134.0"
+    "three": "^0.134.0",
+    "tweakpane": "^3.0.6"
   }
 }

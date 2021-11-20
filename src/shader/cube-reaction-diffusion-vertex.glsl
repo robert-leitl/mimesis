@@ -1,6 +1,6 @@
 #pragma glslify: noise = require('./noise.glsl')
 
-varying vec2 vTexelSize;
+//varying vec2 vTexelSize;
 varying vec3 vNormal;
 varying vec3 vTangent;
 varying vec3 vBitangent;
@@ -27,7 +27,7 @@ vec3 rotate(vec3 v, vec3 axis, float angle) {
 }
 
 void main() {
-    vTexelSize = vec2(1. / uResolution);
+    //vTexelSize = vec2(1. / uResolution);
     vNormal = normal;
     vTangent = tangent;
 

@@ -8,7 +8,7 @@ export class ReactionDiffusion {
 
     useEmotions = true;
     
-    constructor(renderer, gui) {
+    constructor(renderer, pane) {
         this.renderer = renderer;
         this.computeStepsInFrame = 50;
         this.currentRenderTargetIndex = 0;
@@ -16,17 +16,21 @@ export class ReactionDiffusion {
 
         this.#init();
 
-        if (gui) {
-            this.guiFolder = gui.addFolder('Reaction Diffusion');
-            this.diffusionAControl = this.guiFolder.add(this.computeMaterial.uniforms.uDiffusionA, 'value', 0, 1, 0.01);
-            this.diffusionAControl.name('A');
-            this.diffusionBControl = this.guiFolder.add(this.computeMaterial.uniforms.uDiffusionB, 'value', 0, 1, 0.01);
+        if (pane) {
+            this.guiFolder = pane.addFolder({ title: 'Reaction Diffusion', expanded: true });
+            this.diffusionAControl = this.guiFolder.addInput(
+                this.computeMaterial.uniforms.uDiffusionA, 
+                'value', 
+                { min: 0, max: 1, step: 0.01 }
+            );
+            /*this.diffusionAControl.name('A');
+            this.diffusionBControl = this.guiFolder.addInput(this.computeMaterial.uniforms.uDiffusionB, 'value', 0, 1, 0.01);
             this.diffusionBControl.name('B');
-            this.feedRateControl = this.guiFolder.add(this.computeMaterial.uniforms.uFeedRate, 'value', 0.02, 0.07, 0.0005);
+            this.feedRateControl = this.guiFolder.addInput(this.computeMaterial.uniforms.uFeedRate, 'value', 0.02, 0.07, 0.0005);
             this.feedRateControl.name('Feed Rate');
-            this.killRateAControl = this.guiFolder.add(this.computeMaterial.uniforms.uKillRate, 'value', 0.02, 0.07, 0.0005);
-            this.killRateAControl.name('Kill Rate');
-            this.guiFolder.add(this, 'useEmotions');
+            this.killRateAControl = this.guiFolder.addInput(this.computeMaterial.uniforms.uKillRate, 'value', 0.02, 0.07, 0.0005);
+            this.killRateAControl.name('Kill Rate');*/
+            //this.guiFolder.addInput(this, 'useEmotions');
         }
     }
 

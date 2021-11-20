@@ -5,6 +5,8 @@ import {
     IcosahedronBufferGeometry,
     IcosahedronGeometry,
     Mesh,
+    MeshBasicMaterial,
+    MeshStandardMaterial,
     MirroredRepeatWrapping,
     PerspectiveCamera,
     PlaneBufferGeometry,
@@ -21,6 +23,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { VertexTangentsHelper } from 'three/examples/jsm/helpers/VertexTangentsHelper'
 import { VertexNormalsHelper } from 'three/examples/jsm/helpers/VertexNormalsHelper'
 import * as dat from 'dat.gui';
+import { Pane } from 'tweakpane';
 
 import cubeSkinFragmentShader from '../shader/cube-skin-fragment.glsl';
 import cubeSkinVertexShader from '../shader/cube-skin-vertex.glsl';
@@ -59,7 +62,9 @@ export class Sketch {
             this.#init();
         });
 
-        this.gui = new dat.GUI();
+        if (this.isDebugMode) {
+            this.pane = new Pane({ title: 'Settings' });
+        }
     }
 
     #init() {
@@ -78,7 +83,7 @@ export class Sketch {
         this.#initObject();
         this.cubeReactionDiffusion = new CubeReactionDiffusion(
             this.renderer, 
-            this.isDebugMode ? this.gui : null, 
+            this.pane, 
             this.emotionDetector !== null
         );
     
@@ -96,6 +101,10 @@ export class Sketch {
 
             this.documentPointerPosition.x = (e.clientX / window.innerWidth) * 2 - 1;
             this.documentPointerPosition.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+            if (this.cubeReactionDiffusion) {
+                this.cubeReactionDiffusion.pointerPosition = this.documentPointerPosition;
+            }
         };
 
         this.#initGui();
@@ -105,11 +114,12 @@ export class Sketch {
 
     #initGui() {
         if (this.isDebugMode) {
-            this.guiFolder = this.gui.addFolder('Skin Rendering');
-            this.displacementControl = this.guiFolder.add(this.shaderMaterial.uniforms.uDisplacement, 'value', -0.1, 0.1, 0.001);
-            this.displacementControl.name('Displacement');
-
-            this.guiFolder.open();
+            this.paneFolder = this.pane.addFolder({ title: 'Skin Rendering', expanded: true });
+            this.paneFolder.addInput(
+                this.shaderMaterial.uniforms.uDisplacement, 
+                'value',
+                { label: 'displacement', min: -0.03, max: 0.03, step: 0.001 }
+            );
         }
     }
 
@@ -151,7 +161,7 @@ export class Sketch {
                 uResolution: { value: new Vector2() },
                 uMouse: { value: new Vector2() },
                 uCubeMap: { value: null },
-                uDisplacement: { value: .01 },
+                uDisplacement: { value: .02 },
                 uNormalTexture: { value: this.normalTexture },
                 uMatcapTexture: { value: this.matcapTexture }
             },
@@ -159,8 +169,8 @@ export class Sketch {
             fragmentShader: cubeSkinFragmentShader
         });
 
-        const mesh = new Mesh(geometry, this.shaderMaterial);
-        this.scene.add(mesh);
+        this.mesh = new Mesh(geometry, this.shaderMaterial);
+        this.scene.add(this.mesh);
     }
 
     updateSize() {
@@ -198,6 +208,9 @@ export class Sketch {
         if (!this.isDebugMode) {
             this.shaderMaterial.uniforms.uDisplacement.value = this.#emotionParms.displacement;
         }
+
+        this.scene.rotation.y -= 0.003;
+        this.mesh.position.y = Math.sin(this.#time / 3) * 0.03;
     
         this.#render();
 

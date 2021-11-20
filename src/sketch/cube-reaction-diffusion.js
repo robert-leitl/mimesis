@@ -7,28 +7,55 @@ import reactionDiffusionFragmentShader from '../shader/cube-reaction-diffusion-f
 export class CubeReactionDiffusion {
 
     useEmotions = true;
+    usePointer = false;
+    pointerPosition = new Vector2();
     
-    constructor(renderer, gui, isEmotionDetectionAvailable) {
+    constructor(renderer, pane, isEmotionDetectionAvailable) {
         this.renderer = renderer;
-        this.computeStepsInFrame = 15;
+        this.computeStepsInFrame = 10;
         this.currentRenderTargetIndex = 0;
         this.computeSize = 64;
         this.useEmotions = isEmotionDetectionAvailable;
+        this.usePointer = !this.useEmotions;
 
         this.#init();
 
-        if (gui) {
-            this.guiFolder = gui.addFolder('Reaction Diffusion');
-            this.diffusionAControl = this.guiFolder.add(this.computeMaterial.uniforms.uDiffusionA, 'value', 0, 1, 0.01);
-            this.diffusionAControl.name('A');
-            this.diffusionBControl = this.guiFolder.add(this.computeMaterial.uniforms.uDiffusionB, 'value', 0, 1, 0.01);
-            this.diffusionBControl.name('B');
-            this.feedRateControl = this.guiFolder.add(this.computeMaterial.uniforms.uFeedRate, 'value', 0.02, 0.07, 0.0005);
-            this.feedRateControl.name('Feed Rate');
-            this.killRateAControl = this.guiFolder.add(this.computeMaterial.uniforms.uKillRate, 'value', 0.02, 0.07, 0.0005);
-            this.killRateAControl.name('Kill Rate');
-            this.guiFolder.add(this, 'useEmotions');
-            this.guiFolder.open();
+        if (pane) {
+            this.guiFolder = pane.addFolder({ title: 'Reaction Diffusion', expanded: true });
+            this.usePointerSwitch = this.guiFolder.addInput(this, 'usePointer', { label: 'pointer' });
+
+            this.diffusionAControl = this.guiFolder.addInput(
+                this.computeMaterial.uniforms.uDiffusionA, 
+                'value', 
+                { label: 'A', min: 0, max: 1, step: 0.01, disabled: this.usePointer }
+            );
+            this.diffusionBControl = this.guiFolder.addInput(
+                this.computeMaterial.uniforms.uDiffusionB, 
+                'value', 
+                { label: 'B', min: 0, max: 1, step: 0.01, disabled: this.usePointer }
+            );
+            this.feedRateControl = this.guiFolder.addInput(
+                this.computeMaterial.uniforms.uFeedRate, 
+                'value', 
+                { label: 'Feed Rate', min: 0.02, max: 0.07, step: 0.0005, disabled: this.usePointer }
+            );
+            this.killRateControl = this.guiFolder.addInput(
+                this.computeMaterial.uniforms.uKillRate, 
+                'value', 
+                { label: 'Kill Rate', min: 0.02, max: 0.07, step: 0.0005, disabled: this.usePointer }
+            );
+            this.flowSpeedControl = this.guiFolder.addInput(
+                this.computeMaterial.uniforms.uFlowSpeed, 
+                'value', 
+                { label: 'Flow Speed', min: 0.0, max: 0.002, step: 0.0001 }
+            );
+            
+            this.usePointerSwitch.on('change', (e) => {
+                this.diffusionAControl.disabled = e.value;
+                this.diffusionBControl.disabled = e.value;
+                this.feedRateControl.disabled = e.value;
+                this.killRateControl.disabled = e.value;
+            });
         }
     }
 
@@ -41,6 +68,10 @@ export class CubeReactionDiffusion {
             this.computeMaterial.uniforms.uDiffusionB.value = dB;
             this.computeMaterial.uniforms.uFeedRate.value = feed;
             this.computeMaterial.uniforms.uKillRate.value = kill;
+        } else if (this.usePointer) {
+            this.computeMaterial.uniforms.uDiffusionA.value = 1;
+            this.computeMaterial.uniforms.uDiffusionB.value += (Math.min(0.45, 0.4 + this.pointerPosition.x / 5) - this.computeMaterial.uniforms.uDiffusionB.value) / 10;
+            this.computeMaterial.uniforms.uFeedRate.value += (Math.min(0.0375, 0.031 + this.pointerPosition.y / 1000) - this.computeMaterial.uniforms.uFeedRate.value) / 10;
         }
 
         for (let i = 0; i < this.computeStepsInFrame; i++) {
@@ -71,7 +102,8 @@ export class CubeReactionDiffusion {
                 uDiffusionA: { value: 1 },
                 uDiffusionB: { value: 0.45 },
                 uFeedRate: { value: 0.0375 },
-                uKillRate: { value: 0.0575 }
+                uKillRate: { value: 0.0575 },
+                uFlowSpeed: { value: 0.0005 }
             },
             vertexShader: reactionDiffusionVertexShader,
             fragmentShader: reactionDiffusionFragmentShader,

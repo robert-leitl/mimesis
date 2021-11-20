@@ -13,6 +13,7 @@ uniform float uDiffusionA;
 uniform float uDiffusionB;
 uniform float uFeedRate;
 uniform float uKillRate;
+uniform float uFlowSpeed;
 
 vec4 laplacian(vec3 dir) {
     vec4 result = vec4(0., 0., 0., 1.);
@@ -103,6 +104,7 @@ vec4 drawNoiseSeed(vec4 pixel, vec3 dir) {
 void main() {
     vec2 st = gl_FragCoord.xy / uResolution.xy;
     vec3 normal = normalize(vNormal);
+    normal.y -= uFlowSpeed;
 
     vec4 color = react(normal);
     color = clamp(color, 0.0, 1.0);
