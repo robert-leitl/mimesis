@@ -60,39 +60,41 @@ void main() {
 
   // texture color
   float skinTexture = texture(uCubeMap, normalize(vModelSurfacePosition)).r;
-  float skinPattern = 1. - smoothstep(0.4, 0.41, skinTexture);
+  float skinPattern = 1. - smoothstep(0.4, 0.46, skinTexture);
 
   // matcap texture
   vec2 muv = N.xy * 0.5 + .5;
   vec3 matcapColor = texture2D(uMatcapTexture, vec2(muv.x, muv.y)).rgb;
   float fresnel = 1. - lambertDiffuse(V, N);
-  matcapColor *= fresnel * .9 + 0.3;
-  matcapColor *= skinPattern + 0.8;
+  matcapColor *= fresnel * .9 + 0.2;
+  //matcapColor *= skinPattern + .8;
 
   // normal map
   vec3 T = normalize(vViewTangent);
   vec3 B = normalize(cross(N, T));
   mat3 tangentSpace = mat3(T, B, N);
-  vec4 normalColor = texture(uNormalTexture, fract(vec2(.5, .25) * vUv));
+  vec4 normalColor = texture(uNormalTexture, fract(vec2(2., 1.) * vUv));
   vec3 normalMap = normalColor.rgb * 2. - 1.;
-  float normalMapStrength = 0.4;
+  float normalMapStrength = 0.5;
   N = normalize(mix(N, tangentSpace * normalMap, normalMapStrength));
 
   //skinPattern -= smoothstep(0.40, .55, normalColor.r) * smoothstep(0.3895, 0.4, skinTexture) * 0.5;
   //skinPattern = saturate(skinPattern);
 
   // surface settings
-  //vec3 surfaceColor = vec3(0.2235, 0.2745, 0.3882);
-  //vec3 wrapColor = vec3(0.7059, 0.8, 1.0);
-  //vec3 surfaceColor = vec3(0.5333, 0.9137, 0.6784);
-  //vec3 wrapColor = vec3(0.0196, 1.0, 1.0);
-  vec3 surfaceColor = mix(vec3(1.0, 0.7882, 0.2039), vec3(0.5961, 1.0, 0.0667), normalize(vModelSurfacePosition).y);
-  vec3 wrapColor = vec3(0.9216, 0.0078, 0.1294);
+  //vec3 surfaceColor = mix(vec3(1.0, 0.4745, 0.5451), vec3(1.0, 0.5843, 0.9098), normalize(vModelSurfacePosition).y);
+  //vec3 wrapColor = vec3(1.0, 0.0, 0.1333);
+  vec3 surfaceColor = vec3(0.5333, 0.9137, 0.6784);
+  vec3 wrapColor = vec3(0.2196, 0.949, 1.0);
+  //vec3 surfaceColor = vec3(0.9137, 0.5333, 0.5333);
+  //vec3 wrapColor = vec3(1.0, 0.2196, 0.5843);
+  //vec3 surfaceColor = mix(vec3(1.0, 0.7882, 0.2039), vec3(0.9373, 1.0, 0.0667), normalize(vModelSurfacePosition).y);
+  //vec3 wrapColor = vec3(1.0, 0.5686, 0.0);
   //vec3 surfaceColor = vec3(0.0392, 0.9882, 0.3255);
   //vec3 wrapColor = vec3(0.6627, 1.0, 0.1216);
   vec3 lightColor = vec3(1., 1., 1.);
-  vec3 ambientColor =  vec3(0.0392, 0.0392, 0.0392);
-  float wrap = 0.2;
+  vec3 ambientColor =  vec3(0.0, 0.0, 0.0);
+  float wrap = 0.3;
   float shininess = 0.3;
   
 
@@ -108,6 +110,8 @@ void main() {
   color += diffuseColor;
   color += specularColor;
   color += matcapColor;
+
+  color += mix(1., 0., smoothstep(0., min(1., wrap * 2.5), diffuse)) * 0.6 * diffuse * (1. - skinPattern);
 
   color = color;
 

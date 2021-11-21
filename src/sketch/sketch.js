@@ -10,6 +10,7 @@ import {
     MirroredRepeatWrapping,
     PerspectiveCamera,
     PlaneBufferGeometry,
+    ReinhardToneMapping,
     Scene,
     ShaderMaterial,
     SphereBufferGeometry,
@@ -26,6 +27,10 @@ import { VertexNormalsHelper } from 'three/examples/jsm/helpers/VertexNormalsHel
 import cubeSkinFragmentShader from '../shader/cube-skin-fragment.glsl';
 import cubeSkinVertexShader from '../shader/cube-skin-vertex.glsl';
 import { CubeReactionDiffusion } from './cube-reaction-diffusion';
+import { BokehParticles } from './bokeh-particles';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 
 export class Sketch {
     oninit;
@@ -74,7 +79,20 @@ export class Sketch {
         this.scene = new Scene();
         this.renderer = new WebGLRenderer();
         this.renderer.setPixelRatio(Math.min(1, window.devicePixelRatio));
+        //this.renderer.toneMapping = ReinhardToneMapping;
         this.container.appendChild(this.renderer.domElement);
+
+        const renderScene = new RenderPass( this.scene, this.camera );
+        this.bloomPass = new UnrealBloomPass( new Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.4, 0.85 );
+        this.bloomPass.strength = 0.8;
+        this.bloomPass.radius = 1.;
+        this.bloomPass.threshold = 0.8;
+
+        this.composer = new EffectComposer( this.renderer );
+        this.composer.addPass( renderScene );
+        this.composer.addPass( this.bloomPass );
+
+        this.particles = new BokehParticles(this.scene);
 
         this.#initObject();
         this.cubeReactionDiffusion = new CubeReactionDiffusion(
@@ -89,6 +107,9 @@ export class Sketch {
             this.camera,
             this.renderer.domElement
         );
+        this.controls.enablePan = false;
+        this.controls.enableZoom = false;
+        this.controls.enableDamping = true;
         this.controls.update();
 
         document.onpointermove = (e) => {
@@ -116,15 +137,33 @@ export class Sketch {
                 'value',
                 { label: 'displacement', min: -0.03, max: 0.03, step: 0.001 }
             );
+            this.bloomFolder = this.pane.addFolder({ title: 'Bloom', expanded: true });
+            this.bloomFolder.addInput(
+                this.bloomPass, 
+                'strength',
+                { min: 0, max: 1, step: 0.01 }
+            );
+            this.bloomFolder.addInput(
+                this.bloomPass, 
+                'radius',
+                { min: 0, max: 1, step: 0.01 }
+            );
+            this.bloomFolder.addInput(
+                this.bloomPass, 
+                'threshold',
+                { min: 0, max: 1, step: 0.01 }
+            );
         }
     }
 
     #initObject() {
-        //const geometry = new SphereBufferGeometry(0.3, 64, 64);
+        const geometry = new SphereBufferGeometry(0.3, 256, 256);
+        geometry.computeTangents();
+        geometry.attributes.tangent.needsUpdate = true;
 
         // make a sphere geometry from a box by moving each
         // vertex to the length of the radius
-        const geometry = new BoxBufferGeometry(1, 1, 1, 60, 60, 60);
+        /*const geometry = new BoxBufferGeometry(1, 1, 1, 60, 60, 60);
         const radius = 0.3;
         const positions = geometry.attributes.position;
         const normals = geometry.attributes.normal;
@@ -148,7 +187,7 @@ export class Sketch {
         geometry.computeTangents();
         geometry.attributes.position.needsUpdate = true;
         geometry.attributes.normal.needsUpdate = true;
-        geometry.attributes.tangent.needsUpdate = true;
+        geometry.attributes.tangent.needsUpdate = true;*/
 
 
         this.shaderMaterial = new ShaderMaterial({
@@ -171,6 +210,10 @@ export class Sketch {
 
     updateSize() {
         this.renderer.setSize(
+            this.container.offsetWidth,
+            this.container.offsetHeight
+        );
+        this.composer.setSize(
             this.container.offsetWidth,
             this.container.offsetHeight
         );
@@ -206,7 +249,9 @@ export class Sketch {
             this.shaderMaterial.uniforms.uDisplacement.value = this.#emotionParmsL0.displacement;
         }
 
-        this.scene.rotation.y -= 0.003;
+        this.particles.update(this.#time);
+
+        this.scene.rotation.y -= 0.002;
         this.mesh.position.y = Math.sin(this.#time / 3) * 0.03;
         this.mesh.scale.set(
             1 + this.#emotionParmsL2.displacement * 20,
@@ -243,7 +288,7 @@ export class Sketch {
 
     #render() {
         this.shaderMaterial.uniforms.uTime.value = this.#time;
-        this.renderer.render(this.scene, this.camera);
+        this.composer.render();
     }
 
     destroy() {

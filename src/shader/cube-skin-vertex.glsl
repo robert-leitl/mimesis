@@ -36,7 +36,7 @@ vec3 distortNormal(vec3 pos, vec3 distortedPos, vec3 normal) {
     float f = 0.007;
     float radius = length(pos);
     // find the tangents to the normal
-    vec3 t1 = orthogonal(normal);
+    vec3 t1 = tangent;
     vec3 t2 = cross(t1, normal);
     // create the offset points along the tangents
     // set the length to the radius of the sphere
@@ -54,7 +54,7 @@ void main() {
     vWorldSurfacePosition = (modelMatrix * vec4(position, 1.)).xyz;
     vViewSurfacePosition = (viewMatrix * vec4(vWorldSurfacePosition, 1.)).xyz;
     vModelNormal = distortNormal(position, pos, normal);
-    vModelTangent = tangent;
+    vModelTangent = orthogonal(vModelNormal);
     vViewNormal = normalize(normalMatrix * vModelNormal);
     vViewTangent = normalize(normalMatrix * vModelTangent);
 
