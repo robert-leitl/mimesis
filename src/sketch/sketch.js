@@ -1,5 +1,6 @@
 import {
     BoxBufferGeometry,
+    Color,
     CubeTexture,
     FileLoader,
     IcosahedronBufferGeometry,
@@ -43,7 +44,7 @@ export class Sketch {
         angry:      { dA: 1.00, dB: 0.59, feed: 0.0200, kill: 0.0515, displacement: 0.04, flowSpeed: 0.002 },
         fear:       { dA: 1.00, dB: 0.23, feed: 0.0265, kill: 0.0650, displacement: 0.02, flowSpeed: 0.000 },
         happy:      { dA: 0.75, dB: 0.46, feed: 0.0540, kill: 0.0615, displacement: 0.015, flowSpeed: 0.0007 },
-        neutral:    { dA: 1.00, dB: 0.45, feed: 0.0375, kill: 0.0575, displacement: 0.01, flowSpeed: 0.0005 },
+        neutral:    { dA: 1.00, dB: 0.45, feed: 0.0375, kill: 0.0575, displacement: 0.01, flowSpeed: 0.0003 },
         sad:        { dA: 0.72, dB: 0.19, feed: 0.0375, kill: 0.0605, displacement: -0.005, flowSpeed: -0.0005 },
         surprise:   { dA: 0.70, dB: 0.16, feed: 0.0540, kill: 0.0615, displacement: -0.01, flowSpeed: 0.000 }
     };
@@ -75,7 +76,7 @@ export class Sketch {
             0.1,
             100
         );
-        this.camera.position.z = 2;
+        this.camera.position.z = 1.8;
         this.scene = new Scene();
         this.renderer = new WebGLRenderer();
         this.renderer.setPixelRatio(Math.min(1, window.devicePixelRatio));
@@ -84,9 +85,9 @@ export class Sketch {
 
         const renderScene = new RenderPass( this.scene, this.camera );
         this.bloomPass = new UnrealBloomPass( new Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.4, 0.85 );
-        this.bloomPass.strength = 0.8;
+        this.bloomPass.strength = 0.9;
         this.bloomPass.radius = 1.;
-        this.bloomPass.threshold = 0.8;
+        this.bloomPass.threshold = 0.7;
 
         this.composer = new EffectComposer( this.renderer );
         this.composer.addPass( renderScene );
@@ -131,12 +132,28 @@ export class Sketch {
 
     #initGui() {
         if (this.pane) {
-            this.paneFolder = this.pane.addFolder({ title: 'Skin Rendering', expanded: true });
-            this.paneFolder.addInput(
+            this.skinFolder = this.pane.addFolder({ title: 'Skin Rendering', expanded: true });
+            this.skinFolder.addInput(
                 this.shaderMaterial.uniforms.uDisplacement, 
                 'value',
                 { label: 'displacement', min: -0.03, max: 0.03, step: 0.001 }
             );
+            this.skinFolder.addInput(
+                this.shaderMaterial.uniforms.uSurfaceColorA,
+                'value',
+                { label: 'surface A', view: 'color' }
+            );
+            this.skinFolder.addInput(
+                this.shaderMaterial.uniforms.uSurfaceColorB,
+                'value',
+                { label: 'surface B', view: 'color' }
+            );
+            this.skinFolder.addInput(
+                this.shaderMaterial.uniforms.uWrapColor,
+                'value',
+                { label: 'wrap', view: 'color' }
+            );
+
             this.bloomFolder = this.pane.addFolder({ title: 'Bloom', expanded: true });
             this.bloomFolder.addInput(
                 this.bloomPass, 
@@ -161,35 +178,6 @@ export class Sketch {
         geometry.computeTangents();
         geometry.attributes.tangent.needsUpdate = true;
 
-        // make a sphere geometry from a box by moving each
-        // vertex to the length of the radius
-        /*const geometry = new BoxBufferGeometry(1, 1, 1, 60, 60, 60);
-        const radius = 0.3;
-        const positions = geometry.attributes.position;
-        const normals = geometry.attributes.normal;
-        const l = positions.count * positions.itemSize;
-        for(let i=0; i<l; i+=positions.itemSize) {
-            const v = new Vector3(
-                positions.array[i + 0],
-                positions.array[i + 1],
-                positions.array[i + 2]
-            );
-            v.normalize();
-            normals.array[i + 0] = v.x;
-            normals.array[i + 1] = v.y;
-            normals.array[i + 2] = v.z;
-
-            v.multiplyScalar(radius);
-            positions.array[i + 0] = v.x;
-            positions.array[i + 1] = v.y;
-            positions.array[i + 2] = v.z;
-        }
-        geometry.computeTangents();
-        geometry.attributes.position.needsUpdate = true;
-        geometry.attributes.normal.needsUpdate = true;
-        geometry.attributes.tangent.needsUpdate = true;*/
-
-
         this.shaderMaterial = new ShaderMaterial({
             uniforms: {
                 uTime: { value: 1.0 },
@@ -198,7 +186,10 @@ export class Sketch {
                 uCubeMap: { value: null },
                 uDisplacement: { value: .02 },
                 uNormalTexture: { value: this.normalTexture },
-                uMatcapTexture: { value: this.matcapTexture }
+                uMatcapTexture: { value: this.matcapTexture },
+                uSurfaceColorA: { value: new Color(202, 153, 233)},
+                uSurfaceColorB: { value: new Color(255, 0, 41)},
+                uWrapColor: { value: new Color(143, 17, 135)}
             },
             vertexShader: cubeSkinVertexShader,
             fragmentShader: cubeSkinFragmentShader

@@ -15,6 +15,9 @@ uniform samplerCube uCubeMap;
 uniform sampler2D uNormalTexture;
 uniform sampler2D uMatcapTexture;
 uniform sampler2D uEnvTexture;
+uniform vec3 uSurfaceColorA;
+uniform vec3 uSurfaceColorB;
+uniform vec3 uWrapColor;
 
 #define RECIPROCAL_PI2 0.15915494
 #define saturate(a) clamp( a, 0.0, 1.0 );
@@ -60,7 +63,7 @@ void main() {
 
   // texture color
   float skinTexture = texture(uCubeMap, normalize(vModelSurfacePosition)).r;
-  float skinPattern = 1. - smoothstep(0.4, 0.46, skinTexture);
+  float skinPattern = 1. - smoothstep(0.4, 0.49, skinTexture);
 
   // matcap texture
   vec2 muv = N.xy * 0.5 + .5;
@@ -84,18 +87,24 @@ void main() {
   // surface settings
   //vec3 surfaceColor = mix(vec3(1.0, 0.4745, 0.5451), vec3(1.0, 0.5843, 0.9098), normalize(vModelSurfacePosition).y);
   //vec3 wrapColor = vec3(1.0, 0.0, 0.1333);
-  vec3 surfaceColor = vec3(0.5333, 0.9137, 0.6784);
-  vec3 wrapColor = vec3(0.2196, 0.949, 1.0);
+  //vec3 surfaceColor = vec3(0.5333, 0.9137, 0.6784);
+  //vec3 surfaceColor = uSurfaceColor / 255.;
+  //vec3 wrapColor = vec3(0.2196, 0.949, 1.0);
   //vec3 surfaceColor = vec3(0.9137, 0.5333, 0.5333);
   //vec3 wrapColor = vec3(1.0, 0.2196, 0.5843);
   //vec3 surfaceColor = mix(vec3(1.0, 0.7882, 0.2039), vec3(0.9373, 1.0, 0.0667), normalize(vModelSurfacePosition).y);
   //vec3 wrapColor = vec3(1.0, 0.5686, 0.0);
   //vec3 surfaceColor = vec3(0.0392, 0.9882, 0.3255);
   //vec3 wrapColor = vec3(0.6627, 1.0, 0.1216);
+
+  vec3 surfaceColorA = uSurfaceColorA / 255.;
+  vec3 surfaceColorB = uSurfaceColorB / 255.;
+  vec3 surfaceColor = mix(surfaceColorB, surfaceColorA, normalize(vModelSurfacePosition).y);
+  vec3 wrapColor = uWrapColor / 255.;
   vec3 lightColor = vec3(1., 1., 1.);
   vec3 ambientColor =  vec3(0.0, 0.0, 0.0);
   float wrap = 0.3;
-  float shininess = 0.3;
+  float shininess = 0.2;
   
 
   float diffuse = lambertDiffuseWrap(L, N, wrap);

@@ -62,6 +62,7 @@ void main() {
     vec3 worldLightDirection = vec3(0.) - worldLightPosition;
     //vViewLightPosition = (modelViewMatrix * vec4(worldLightPosition, 1.)).xyz;
     //vViewLightDirection = normalize(modelViewMatrix * vec4(worldLightDirection, 0.)).xyz;
+    
     // fake light direction to move with camera
     vViewLightDirection = normalize(worldLightDirection);
 

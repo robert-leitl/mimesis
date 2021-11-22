@@ -104,7 +104,7 @@ export class CubeReactionDiffusion {
                 uDiffusionB: { value: 0.45 },
                 uFeedRate: { value: 0.0375 },
                 uKillRate: { value: 0.0575 },
-                uFlowSpeed: { value: 0.0005 }
+                uFlowSpeed: { value: 0.0003 }
             },
             vertexShader: reactionDiffusionVertexShader,
             fragmentShader: reactionDiffusionFragmentShader,
