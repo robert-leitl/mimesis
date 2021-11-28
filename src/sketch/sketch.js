@@ -203,7 +203,7 @@ export class Sketch {
                 uSurfaceColorA: { value: new Color(51, 222, 255)},
                 uSurfaceColorB: { value: new Color(0, 144, 227)},
                 uWrapColor: { value: new Color(72, 52, 201)},
-                uColorBalance: { value: 0.5 }
+                uColorBalance: { value: 0. }
             },
             vertexShader: cubeSkinVertexShader,
             fragmentShader: cubeSkinFragmentShader
@@ -252,9 +252,8 @@ export class Sketch {
     
         if (this.emotionDetector !== null) {
             this.shaderMaterial.uniforms.uDisplacement.value = this.#emotionParmsL0.displacement;
+            this.shaderMaterial.uniforms.uColorBalance.value = this.#emotionParmsL2.colorBalance;
         }
-
-        this.shaderMaterial.uniforms.uColorBalance.value = this.#emotionParmsL2.colorBalance;
 
         this.particles.update(this.#time);
 

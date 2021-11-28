@@ -2,7 +2,12 @@ import { EmotionDetection } from './sketch/emotion-detection';
 import { Sketch } from './sketch/sketch';
 import { Pane } from 'tweakpane';
 
-const DEBUG = true;
+let DEBUG = false;
+
+if (process.env.NODE_ENV !== 'production') {
+    // Only runs in development and will be stripped in production builds.
+    DEBUG = true;
+}
 
 let sketch;
 let resizeTimeoutId;
