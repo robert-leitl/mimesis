@@ -32,6 +32,8 @@ import { BokehParticles } from './bokeh-particles';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
 
 export class Sketch {
     oninit;
@@ -41,12 +43,12 @@ export class Sketch {
     #isDestroyed = false;
 
     #emotionParamTargets = {
-        angry:      { dA: 1.00, dB: 0.59, feed: 0.0200, kill: 0.0515, displacement: 0.04, flowSpeed: 0.002 },
-        fear:       { dA: 1.00, dB: 0.23, feed: 0.0265, kill: 0.0650, displacement: 0.02, flowSpeed: 0.000 },
-        happy:      { dA: 0.75, dB: 0.46, feed: 0.0540, kill: 0.0615, displacement: 0.015, flowSpeed: 0.0007 },
-        neutral:    { dA: 1.00, dB: 0.45, feed: 0.0375, kill: 0.0575, displacement: 0.01, flowSpeed: 0.0003 },
-        sad:        { dA: 0.72, dB: 0.19, feed: 0.0375, kill: 0.0605, displacement: -0.005, flowSpeed: -0.0005 },
-        surprise:   { dA: 0.70, dB: 0.16, feed: 0.0540, kill: 0.0615, displacement: -0.01, flowSpeed: 0.000 }
+        angry:      { dA: 1.00, dB: 0.59, feed: 0.0200, kill: 0.0515, displacement: 0.04, flowSpeed: 0.002, colorBalance: 1 },
+        fear:       { dA: 1.00, dB: 0.23, feed: 0.0265, kill: 0.0650, displacement: 0.02, flowSpeed: 0.000, colorBalance: 0 },
+        happy:      { dA: 0.75, dB: 0.46, feed: 0.0540, kill: 0.0615, displacement: 0.015, flowSpeed: 0.0007, colorBalance: 0.2 },
+        neutral:    { dA: 1.00, dB: 0.45, feed: 0.0375, kill: 0.0575, displacement: 0.01, flowSpeed: 0.0003, colorBalance: 0.3 },
+        sad:        { dA: 0.72, dB: 0.19, feed: 0.0375, kill: 0.0605, displacement: -0.005, flowSpeed: -0.0005, colorBalance: 0 },
+        surprise:   { dA: 0.70, dB: 0.16, feed: 0.0540, kill: 0.0615, displacement: -0.01, flowSpeed: 0.000, colorBalance: 0 }
     };
     #emotionParmsL0 = { ...this.#emotionParamTargets.neutral };
     #emotionParmsL1 = { ...this.#emotionParamTargets.neutral };
@@ -78,7 +80,10 @@ export class Sketch {
         );
         this.camera.position.z = 1.8;
         this.scene = new Scene();
-        this.renderer = new WebGLRenderer();
+        this.renderer = new WebGLRenderer({
+            antialias: false,
+            powerPreference: 'high-performance'
+        });
         this.renderer.setPixelRatio(Math.min(1, window.devicePixelRatio));
         //this.renderer.toneMapping = ReinhardToneMapping;
         this.container.appendChild(this.renderer.domElement);
@@ -89,9 +94,12 @@ export class Sketch {
         this.bloomPass.radius = 1.;
         this.bloomPass.threshold = 0.7;
 
+        const fxaaPass = new ShaderPass( FXAAShader );
+
         this.composer = new EffectComposer( this.renderer );
         this.composer.addPass( renderScene );
         this.composer.addPass( this.bloomPass );
+        //this.composer.addPass( fxaaPass );
 
         this.particles = new BokehParticles(this.scene);
 
@@ -138,7 +146,7 @@ export class Sketch {
                 'value',
                 { label: 'displacement', min: -0.03, max: 0.03, step: 0.001 }
             );
-            this.skinFolder.addInput(
+            /*this.skinFolder.addInput(
                 this.shaderMaterial.uniforms.uSurfaceColorA,
                 'value',
                 { label: 'surface A', view: 'color' }
@@ -152,6 +160,11 @@ export class Sketch {
                 this.shaderMaterial.uniforms.uWrapColor,
                 'value',
                 { label: 'wrap', view: 'color' }
+            );*/
+            this.skinFolder.addInput(
+                this.shaderMaterial.uniforms.uColorBalance,
+                'value',
+                { label: 'color', min: 0, max: 1, step: 0.001 }
             );
 
             this.bloomFolder = this.pane.addFolder({ title: 'Bloom', expanded: true });
@@ -187,9 +200,10 @@ export class Sketch {
                 uDisplacement: { value: .02 },
                 uNormalTexture: { value: this.normalTexture },
                 uMatcapTexture: { value: this.matcapTexture },
-                uSurfaceColorA: { value: new Color(202, 153, 233)},
-                uSurfaceColorB: { value: new Color(255, 0, 41)},
-                uWrapColor: { value: new Color(143, 17, 135)}
+                uSurfaceColorA: { value: new Color(51, 222, 255)},
+                uSurfaceColorB: { value: new Color(0, 144, 227)},
+                uWrapColor: { value: new Color(72, 52, 201)},
+                uColorBalance: { value: 0.5 }
             },
             vertexShader: cubeSkinVertexShader,
             fragmentShader: cubeSkinFragmentShader
@@ -240,6 +254,8 @@ export class Sketch {
             this.shaderMaterial.uniforms.uDisplacement.value = this.#emotionParmsL0.displacement;
         }
 
+        this.shaderMaterial.uniforms.uColorBalance.value = this.#emotionParmsL2.colorBalance;
+
         this.particles.update(this.#time);
 
         this.scene.rotation.y -= 0.002;
@@ -258,7 +274,7 @@ export class Sketch {
     #animationEmotionParams() {
         if (!this.emotionDetector) return;
 
-        const targetEmotionParams = { dA: 0, dB: 0, feed: 0, kill: 0, displacement: 0, flowSpeed: 0 };
+        const targetEmotionParams = { dA: 0, dB: 0, feed: 0, kill: 0, displacement: 0, flowSpeed: 0, colorBalance: 0 };
         const paramKeys = Object.keys(targetEmotionParams);
         let propabilitySum = 0;
         Object.entries(this.#emotionParamTargets).forEach(([key, params]) => {

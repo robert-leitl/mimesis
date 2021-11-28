@@ -1,3 +1,5 @@
+#pragma glslify: hsv2rgb = require('glsl-hsv2rgb')
+
 varying vec2 vUv;
 varying vec3 vModelSurfacePosition;
 varying vec3 vWorldSurfacePosition;
@@ -18,9 +20,30 @@ uniform sampler2D uEnvTexture;
 uniform vec3 uSurfaceColorA;
 uniform vec3 uSurfaceColorB;
 uniform vec3 uWrapColor;
+uniform float uColorBalance;
 
 #define RECIPROCAL_PI2 0.15915494
 #define saturate(a) clamp( a, 0.0, 1.0 );
+
+vec3 calmSurfaceColorA = vec3(0.2, 0.871, 1.);
+vec3 calmSurfaceColorB = vec3(0., 0.565, 0.89);
+vec3 calmWrapColor = vec3(0.282, 0.204, 0.788);
+
+vec3 upsetSurfaceColorA = vec3(1., 0.886, 0.231);
+vec3 upsetSurfaceColorB = vec3(1., 0.329, 0.008);
+vec3 upsetWrapColor = vec3(1., 0., 0.);
+
+vec3 calmSurfaceColorAHsv = vec3(190., 90., 100.) / vec3(360., 100., 100.);
+vec3 calmSurfaceColorBHsv = vec3(202., 100., 98.) / vec3(360., 100., 100.);
+vec3 calmWrapColorHsv = vec3(248., 74., 78.) / vec3(360., 100., 100.);
+
+vec3 upsetSurfaceColorAHsv = vec3(51., 77., 100.) / vec3(360., 100., 100.);
+vec3 upsetSurfaceColorBHsv = vec3(19., 99., 100.) / vec3(360., 100., 100.);
+vec3 upsetWrapColorHsv = vec3(0., 100., 100.) / vec3(360., 100., 100.);
+
+/*vec3 upsetSurfaceColorAHsv = vec3(181., 20., 100.) / vec3(360., 100., 100.);
+vec3 upsetSurfaceColorBHsv = vec3(183., 78., 100.) / vec3(360., 100., 100.);
+vec3 upsetWrapColorHsv = vec3(219., 100., 80.) / vec3(360., 100., 100.);*/
 
 float lambertDiffuse(
   vec3 lightDirection,
@@ -70,7 +93,7 @@ void main() {
   vec3 matcapColor = texture2D(uMatcapTexture, vec2(muv.x, muv.y)).rgb;
   float fresnel = 1. - lambertDiffuse(V, N);
   matcapColor *= fresnel * .9 + 0.2;
-  //matcapColor *= skinPattern + .8;
+  matcapColor *= 0.6 + skinPattern;
 
   // normal map
   vec3 T = normalize(vViewTangent);
@@ -78,29 +101,20 @@ void main() {
   mat3 tangentSpace = mat3(T, B, N);
   vec4 normalColor = texture(uNormalTexture, fract(vec2(2., 1.) * vUv));
   vec3 normalMap = normalColor.rgb * 2. - 1.;
-  float normalMapStrength = 0.5;
+  float normalMapStrength = .2 + 0.7 * (1. - skinPattern);
   N = normalize(mix(N, tangentSpace * normalMap, normalMapStrength));
 
-  //skinPattern -= smoothstep(0.40, .55, normalColor.r) * smoothstep(0.3895, 0.4, skinTexture) * 0.5;
-  //skinPattern = saturate(skinPattern);
-
-  // surface settings
-  //vec3 surfaceColor = mix(vec3(1.0, 0.4745, 0.5451), vec3(1.0, 0.5843, 0.9098), normalize(vModelSurfacePosition).y);
-  //vec3 wrapColor = vec3(1.0, 0.0, 0.1333);
-  //vec3 surfaceColor = vec3(0.5333, 0.9137, 0.6784);
-  //vec3 surfaceColor = uSurfaceColor / 255.;
-  //vec3 wrapColor = vec3(0.2196, 0.949, 1.0);
-  //vec3 surfaceColor = vec3(0.9137, 0.5333, 0.5333);
-  //vec3 wrapColor = vec3(1.0, 0.2196, 0.5843);
-  //vec3 surfaceColor = mix(vec3(1.0, 0.7882, 0.2039), vec3(0.9373, 1.0, 0.0667), normalize(vModelSurfacePosition).y);
-  //vec3 wrapColor = vec3(1.0, 0.5686, 0.0);
-  //vec3 surfaceColor = vec3(0.0392, 0.9882, 0.3255);
-  //vec3 wrapColor = vec3(0.6627, 1.0, 0.1216);
-
-  vec3 surfaceColorA = uSurfaceColorA / 255.;
-  vec3 surfaceColorB = uSurfaceColorB / 255.;
+  // colors
+  vec3 surfaceColorA = mix(calmSurfaceColorAHsv, upsetSurfaceColorAHsv, uColorBalance);
+  vec3 surfaceColorB = mix(calmSurfaceColorBHsv, upsetSurfaceColorBHsv, uColorBalance);
+  vec3 wrapColor = mix(calmWrapColorHsv, upsetWrapColorHsv, uColorBalance);
+  surfaceColorA = hsv2rgb(surfaceColorA);
+  surfaceColorB = hsv2rgb(surfaceColorB);
+  wrapColor = hsv2rgb(wrapColor);
+  /*surfaceColorA = uSurfaceColorA / 255.;
+  surfaceColorB = uSurfaceColorB / 255.;
+  wrapColor = uWrapColor / 255.;*/
   vec3 surfaceColor = mix(surfaceColorB, surfaceColorA, normalize(vModelSurfacePosition).y);
-  vec3 wrapColor = uWrapColor / 255.;
   vec3 lightColor = vec3(1., 1., 1.);
   vec3 ambientColor =  vec3(0.0, 0.0, 0.0);
   float wrap = 0.3;
