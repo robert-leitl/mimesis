@@ -15,7 +15,7 @@ export class BokehParticles {
 
         Promise.all(assets).then((res) => {
             this.particleTexture = res[0];
-            this.#init();
+            this.#initBokehParticles();
         });
     }
 
@@ -25,7 +25,7 @@ export class BokehParticles {
         }
     }
 
-    #init() {
+    #initBokehParticles() {
         const geometry = new BufferGeometry();
         const vertices = new Float32Array(this.#NUM_PARTICLES * 3);
         const radius = 1.2;

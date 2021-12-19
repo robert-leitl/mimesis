@@ -67,11 +67,11 @@ export class Sketch {
         Promise.all(assets).then((res) => {
             this.normalTexture = res[0];
             this.matcapTexture = res[1];
-            this.#init();
+            this.#initSketch();
         });
     }
 
-    #init() {
+    #initSketch() {
         this.camera = new PerspectiveCamera(
             45,
             this.container.offsetWidth / this.container.offsetHeight,

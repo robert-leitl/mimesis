@@ -3,7 +3,11 @@ import { Sketch } from './sketch/sketch';
 import { Pane } from 'tweakpane';
 import { AudioEffects } from './sketch/audio-effects';
 
-let DEBUG = false;
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+const debugParam = urlParams.get('debug');
+
+let DEBUG = debugParam !== null;
 
 if (process.env.NODE_ENV !== 'production') {
     // Only runs in development and will be stripped in production builds.

@@ -17,7 +17,7 @@ export class CubeReactionDiffusion {
         this.useEmotions = isEmotionDetectionAvailable;
         this.usePointer = !this.useEmotions;
 
-        this.#init();
+        this.#initCubeReactionDiffusion();
 
         if (pane) {
             this.guiFolder = pane.addFolder({ title: 'Reaction Diffusion', expanded: true });
@@ -92,7 +92,7 @@ export class CubeReactionDiffusion {
         return this.computeRenderTargets[this.currentRenderTargetIndex].texture
     }
 
-    #init() {
+    #initCubeReactionDiffusion() {
         this.computeMaterial = new ShaderMaterial({
             uniforms: {
                 uResolution: { value: new Vector2(this.computeSize, this.computeSize) },

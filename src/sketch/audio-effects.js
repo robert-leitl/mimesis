@@ -39,7 +39,7 @@ export class AudioEffects {
         this.emotionDetector = emotionDetector;
         this.pane = pane;
 
-        this.#init();
+        this.#initAudioEffects();
     }
 
     resize() {}
@@ -72,7 +72,7 @@ export class AudioEffects {
         this.#isDestroyed = true;
     }
 
-    async #init() {
+    async #initAudioEffects() {
 
         this.#initMasterVolume();
 
@@ -145,7 +145,8 @@ export class AudioEffects {
 
             if (this.emotionDetector) {
                 this.emotion = (this.emotionDetector.result.currentEmotion);
-                console.log(this.emotion);
+            } else if (!this.pane) {
+                this.emotion = 'neutral';
             }
 
             if (this.emotion != oldEmotion) {
