@@ -13,7 +13,7 @@ void main() {
     color.b = texture(uTexture, uv + abberation).b;
     color.b *= 0.95;
 
-    float alpha = vAlpha * .15;
+    float alpha = vAlpha * .1;
     color.a *= alpha;
 
     gl_FragColor = color;

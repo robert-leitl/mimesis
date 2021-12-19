@@ -1,5 +1,4 @@
 import { DataTexture, Mesh, OrthographicCamera, PlaneBufferGeometry, Scene, ShaderMaterial, WebGLRenderTarget, Vector2, LinearFilter, FloatType, MirroredRepeatWrapping, RGBAFormat, RGBFormat, RepeatWrapping, SphereBufferGeometry, CubeCamera, WebGLCubeRenderTarget, BackSide, CubeTexture, IcosahedronBufferGeometry, BoxBufferGeometry, BoxGeometry, Vector3 } from "three";
-import * as dat from 'dat.gui';
 
 import reactionDiffusionVertexShader from '../shader/cube-reaction-diffusion-vertex.glsl';
 import reactionDiffusionFragmentShader from '../shader/cube-reaction-diffusion-fragment.glsl';

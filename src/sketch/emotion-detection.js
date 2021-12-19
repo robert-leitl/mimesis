@@ -30,8 +30,14 @@ async function setupWebcam() {
 const emotions = [ 'angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise' ];
 const emotionProbability = emotions.reduce((map, label) => ({...map, [label]: 0}), {});
 emotionProbability.neutral = 1;
+currentEmotion = 'neutral';
 let emotionModel = null;
 let model = null;
+
+const EmotionDetectionResult = {
+    emotionProbability,
+    currentEmotion
+};
 
 async function predictEmotion( points ) {
     let result = tf.tidy( () => {
@@ -40,8 +46,13 @@ async function predictEmotion( points ) {
     });
     let prediction = await result.data();
     result.dispose();
+    // remove disgust
+    prediction[1] = 0;
+    /*prediction[2] *= 0.2;
+    prediction[5] *= 3;*/
     // Get the index of the maximum value
     let id = prediction.indexOf( Math.max( ...prediction ) );
+    EmotionDetectionResult.currentEmotion = emotions[id];
     prediction.forEach((p, i) => {
         emotionProbability[emotions[i]] = p;
     });
@@ -121,5 +132,5 @@ const startEmitionDetection = async (pane) => {
 
 export const EmotionDetection = {
     startEmitionDetection,
-    emotionProbability
+    result: EmotionDetectionResult
 };

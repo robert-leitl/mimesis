@@ -111,9 +111,6 @@ void main() {
   surfaceColorA = hsv2rgb(surfaceColorA);
   surfaceColorB = hsv2rgb(surfaceColorB);
   wrapColor = hsv2rgb(wrapColor);
-  /*surfaceColorA = uSurfaceColorA / 255.;
-  surfaceColorB = uSurfaceColorB / 255.;
-  wrapColor = uWrapColor / 255.;*/
   vec3 surfaceColor = mix(surfaceColorB, surfaceColorA, normalize(vModelSurfacePosition).y);
   vec3 lightColor = vec3(1., 1., 1.);
   vec3 ambientColor =  vec3(0.0, 0.0, 0.0);
@@ -124,7 +121,6 @@ void main() {
   float diffuse = lambertDiffuseWrap(L, N, wrap);
   vec3 mixedSurfaceColor = mix(wrapColor, surfaceColor, smoothstep(0., min(1., wrap * 2.), diffuse));
   mixedSurfaceColor *= skinPattern;
-  //mixedSurfaceColor *= mixedSurfaceColor;
   vec3 diffuseColor = diffuse * lightColor * mixedSurfaceColor;
   vec3 specularColor = blinnPhongSpecular(L, V, N, shininess) * lightColor * diffuse;
 

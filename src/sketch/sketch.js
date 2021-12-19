@@ -45,7 +45,7 @@ export class Sketch {
     #emotionParamTargets = {
         angry:      { dA: 1.00, dB: 0.59, feed: 0.0200, kill: 0.0515, displacement: 0.04, flowSpeed: 0.002, colorBalance: 1 },
         fear:       { dA: 1.00, dB: 0.23, feed: 0.0265, kill: 0.0650, displacement: 0.02, flowSpeed: 0.000, colorBalance: 0 },
-        happy:      { dA: 0.75, dB: 0.46, feed: 0.0540, kill: 0.0615, displacement: 0.015, flowSpeed: 0.0007, colorBalance: 0.2 },
+        happy:      { dA: 0.79, dB: 0.46, feed: 0.0540, kill: 0.0615, displacement: 0.015, flowSpeed: 0.0007, colorBalance: 0.2 },
         neutral:    { dA: 1.00, dB: 0.45, feed: 0.0375, kill: 0.0575, displacement: 0.01, flowSpeed: 0.0003, colorBalance: 0.3 },
         sad:        { dA: 0.72, dB: 0.19, feed: 0.0375, kill: 0.0605, displacement: -0.005, flowSpeed: -0.0005, colorBalance: 0 },
         surprise:   { dA: 0.70, dB: 0.16, feed: 0.0540, kill: 0.0615, displacement: -0.01, flowSpeed: 0.000, colorBalance: 0 }
@@ -277,7 +277,7 @@ export class Sketch {
         const paramKeys = Object.keys(targetEmotionParams);
         let propabilitySum = 0;
         Object.entries(this.#emotionParamTargets).forEach(([key, params]) => {
-            const weight = Math.pow(this.emotionDetector.emotionProbability[key], 2)
+            const weight = Math.pow(this.emotionDetector.result.emotionProbability[key], 2)
             paramKeys.forEach(paramKey => {
                 targetEmotionParams[paramKey] += params[paramKey] * weight
             });

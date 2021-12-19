@@ -1,6 +1,7 @@
 import { EmotionDetection } from './sketch/emotion-detection';
 import { Sketch } from './sketch/sketch';
 import { Pane } from 'tweakpane';
+import { AudioEffects } from './sketch/audio-effects';
 
 let DEBUG = false;
 
@@ -25,16 +26,27 @@ window.addEventListener('load', async () => {
         await EmotionDetection.startEmitionDetection(pane);
         isEmotionDetectionAvailable = true;
     } catch (e) {
-        startTimeout = 0;
+        startTimeout = 100;
         console.error(e);
     }
 
     setTimeout(() => {
-        document.body.removeChild(document.body.querySelector('#loader'));
-        const container = document.body;
+        const container = document.querySelector('#container');
+        const startButton = document.querySelector('#start-button');
+        const intro = document.querySelector('#intro');
         sketch = new Sketch(container, isEmotionDetectionAvailable ? EmotionDetection : null, pane);
+        audioEffects = new AudioEffects(container, isEmotionDetectionAvailable ? EmotionDetection : null, pane);
+
         sketch.oninit = () => {
-            sketch.animate(); 
+            startButton.style.opacity = 1;
+            document.body.removeChild(document.body.querySelector('#loader'));
+
+            startButton.addEventListener('click', () => {
+                document.body.removeChild(startButton);
+                document.body.removeChild(intro);
+                sketch.animate();
+                audioEffects.run();
+            });
         }
     }, startTimeout);
 });
