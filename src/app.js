@@ -23,7 +23,7 @@ window.addEventListener('load', async () => {
 
     let pane;
     if (DEBUG) {
-        pane = new Pane({ title: 'Settings' });
+        pane = new Pane({ title: 'Settings', expanded: false});
     }
 
     try {

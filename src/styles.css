@@ -7,9 +7,10 @@ html, body {
     overflow: hidden;
     background: black;
     color: #b3b3b3;
-    font-size: 16px;
-    font-family: Andale Mono,AndaleMono,monospace;
-    --center-offset: 5em;
+    font-size: calc(11px + (18 - 11) * ((100vw - 300px) / (1600 - 300)));
+    font-family: Book Antiqua,Palatino,Palatino Linotype,Palatino LT STD,Georgia,serif; 
+    font-family: Baskerville,Baskerville Old Face,Hoefler Text,Garamond,Times New Roman,serif; 
+    --center-offset: 9em;
 }
 
 * {
@@ -76,12 +77,16 @@ html, body {
 
 #start-button {
   border-color: #aaa;
+  background: black;
   color: #eee;
+  background: #eee;
+  color: #333;
+  border: none;
+  font-weight: bold;
   text-transform: uppercase;
   text-align: center;
   opacity: 0;
   transition: opacity 400ms;
-  background: black;
   cursor: pointer;
 }
 
@@ -102,6 +107,22 @@ html, body {
 }
 
 #intro p {
-  font-size: 0.8em;
-  max-width: 46em;
+  font-size: 1.1em;
+  max-width: 30em;
+  line-height: 1.4em;
+}
+
+h1 {
+  font-size: 2.3em;
+  color: white;
+  font-weight: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+h1 span {
+  font-weight: lighter;
+  font-family: Andale Mono,AndaleMono,monospace;
+  text-transform: lowercase;
+  letter-spacing: 0;
 }
