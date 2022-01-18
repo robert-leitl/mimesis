@@ -35,6 +35,7 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
 import { LineParticles } from './line-particles';
+import { Object3D } from 'three';
 
 export class Sketch {
     oninit;
@@ -102,8 +103,11 @@ export class Sketch {
         this.composer.addPass( this.bloomPass );
         //this.composer.addPass( fxaaPass );
 
+        this.orb = new Object3D();
+        this.scene.add(this.orb);
+
         this.particles = new BokehParticles(this.scene);
-        this.lineParticles = new LineParticles(this.scene);
+        this.lineParticles = new LineParticles(this.orb);
 
         this.#initObject();
         this.cubeReactionDiffusion = new CubeReactionDiffusion(
@@ -211,8 +215,8 @@ export class Sketch {
             fragmentShader: cubeSkinFragmentShader
         });
 
-        this.mesh = new Mesh(geometry, this.shaderMaterial);
-        this.scene.add(this.mesh);
+        const mesh = new Mesh(geometry, this.shaderMaterial);
+        this.orb.add(mesh);
     }
 
     updateSize() {
@@ -261,8 +265,8 @@ export class Sketch {
         this.lineParticles.update(this.#time);
 
         this.scene.rotation.y -= 0.002;
-        this.mesh.position.y = Math.sin(this.#time / 3) * 0.03;
-        this.mesh.scale.set(
+        this.orb.position.y = Math.sin(this.#time / 3) * 0.03;
+        this.orb.scale.set(
             1 + this.#emotionParmsL2.displacement * 20,
             1 + this.#emotionParmsL2.displacement * 20,
             1 + this.#emotionParmsL2.displacement * 20
