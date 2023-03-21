@@ -59,6 +59,9 @@ export class CubeReactionDiffusion {
     }
 
     compute(pointer, time, dA, dB, feed, kill, flowSpeed) {
+        const xr = this.renderer.xr.enabled;
+        this.renderer.xr.enabled = false;
+
         this.computeMaterial.uniforms.uPointer.value = pointer;
         this.computeMaterial.uniforms.uTime.value = time;
 
@@ -87,7 +90,7 @@ export class CubeReactionDiffusion {
             this.currentRenderTargetIndex = nextRenderTargetIndex;
         }
 
-        this.renderer.setRenderTarget(null);
+        this.renderer.xr.enabled = xr;
 
         return this.computeRenderTargets[this.currentRenderTargetIndex].texture
     }

@@ -1,7 +1,11 @@
 import {
+    AmbientLight,
     BoxBufferGeometry,
+    BoxGeometry,
     Color,
     CubeTexture,
+    DirectionalLight,
+    DoubleSide,
     FileLoader,
     IcosahedronBufferGeometry,
     IcosahedronGeometry,
@@ -24,6 +28,7 @@ import {
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { VertexTangentsHelper } from 'three/examples/jsm/helpers/VertexTangentsHelper'
 import { VertexNormalsHelper } from 'three/examples/jsm/helpers/VertexNormalsHelper'
+import * as THREE from "three/src/Three.js";
 
 import cubeSkinFragmentShader from '../shader/cube-skin-fragment.glsl';
 import cubeSkinVertexShader from '../shader/cube-skin-vertex.glsl';
@@ -36,6 +41,7 @@ import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
 import { LineParticles } from './line-particles';
 import { Object3D } from 'three';
+import { VRButton } from "three/examples/jsm/webxr/VRButton.js";
 
 export class Sketch {
     oninit;
@@ -77,15 +83,30 @@ export class Sketch {
         this.camera = new PerspectiveCamera(
             45,
             this.container.offsetWidth / this.container.offsetHeight,
-            0.1,
-            100
+            .5,
+            10
         );
         this.camera.position.z = 1.8;
         this.scene = new Scene();
+
+        var cube = new Mesh(new BoxGeometry(2,0.1,0.1),new MeshStandardMaterial({
+            color: "red"
+        }));
+        //this.scene.add(cube);
+        //this.scene.add(new AmbientLight(0xaaaaaa));
+        var directionalLight = new DirectionalLight(0xffffff);
+        directionalLight.position.set(3, 3, 3);
+        //this.scene.add(directionalLight);
+
+
         this.renderer = new WebGLRenderer({
             antialias: false,
             powerPreference: 'high-performance'
         });
+
+        this.renderer.xr.enabled = true;
+        document.body.append(VRButton.createButton(this.renderer));
+
         this.renderer.setPixelRatio(Math.min(1, window.devicePixelRatio));
         //this.renderer.toneMapping = ReinhardToneMapping;
         this.container.appendChild(this.renderer.domElement);
@@ -212,7 +233,8 @@ export class Sketch {
                 uColorBalance: { value: 0. }
             },
             vertexShader: cubeSkinVertexShader,
-            fragmentShader: cubeSkinFragmentShader
+            fragmentShader: cubeSkinFragmentShader,
+            side: DoubleSide
         });
 
         const mesh = new Mesh(geometry, this.shaderMaterial);
@@ -233,6 +255,10 @@ export class Sketch {
         this.camera.aspect =
             this.container.offsetWidth / this.container.offsetHeight;
         this.camera.updateProjectionMatrix();
+    }
+
+    run() {
+        this.renderer.setAnimationLoop(() => this.animate());
     }
 
     animate() {
@@ -273,8 +299,6 @@ export class Sketch {
         )
     
         this.#render();
-
-        requestAnimationFrame(() => this.animate());
     }
 
     #animationEmotionParams() {
@@ -301,7 +325,8 @@ export class Sketch {
 
     #render() {
         this.shaderMaterial.uniforms.uTime.value = this.#time;
-        this.composer.render();
+        //this.composer.render();
+        this.renderer.render(this.scene, this.camera);
     }
 
     destroy() {

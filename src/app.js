@@ -1,7 +1,19 @@
+
+import { LookingGlassConfig, LookingGlassWebXRPolyfill } from '@lookingglass/webxr/dist/@lookingglass/webxr'
 import { EmotionDetection } from './sketch/emotion-detection';
 import { Sketch } from './sketch/sketch';
 import { Pane } from 'tweakpane';
 import { AudioEffects } from './sketch/audio-effects';
+
+const config = LookingGlassConfig
+config.tileHeight = 1024
+config.numViews = 45
+config.targetY = 0
+config.targetZ = 0
+config.targetX = 0
+config.targetDiam = 1
+config.fovy = (45 * Math.PI) / 180
+new LookingGlassWebXRPolyfill()
 
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
@@ -48,7 +60,7 @@ window.addEventListener('load', async () => {
             startButton.addEventListener('click', () => {
                 document.body.removeChild(startButton);
                 document.body.removeChild(intro);
-                sketch.animate();
+                sketch.run();
                 audioEffects.run();
             });
         }
@@ -66,5 +78,3 @@ window.addEventListener('resize', () => {
         }, 300);
     }
 });
-
-
