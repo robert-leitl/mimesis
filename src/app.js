@@ -11,8 +11,8 @@ config.numViews = 45
 config.targetY = 0
 config.targetZ = 0
 config.targetX = 0
-config.targetDiam = 1
-config.fovy = (45 * Math.PI) / 180
+config.targetDiam = 1.5
+config.fovy = (20 * Math.PI) / 180
 new LookingGlassWebXRPolyfill()
 
 const queryString = window.location.search;

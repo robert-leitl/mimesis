@@ -81,13 +81,14 @@ export class Sketch {
 
     #initSketch() {
         this.camera = new PerspectiveCamera(
-            45,
+            20,
             this.container.offsetWidth / this.container.offsetHeight,
             .5,
             10
         );
-        this.camera.position.z = 1.8;
+        this.camera.position.z = 2;
         this.scene = new Scene();
+        //this.scene.position.z = -0.2;
 
         var cube = new Mesh(new BoxGeometry(2,0.1,0.1),new MeshStandardMaterial({
             color: "red"
